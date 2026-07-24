@@ -251,11 +251,25 @@ tower = st.text_input("Tower")
 level = st.text_input("Level")
 
 
-# Create Excel sheet name after getting inputs
+# Default values
+
+TEMPLATE_SHEET = None
+LOCAL_FILE = None
+
+
+# Create Excel file name and sheet name
 
 if tower and level:
-    TEMPLATE_SHEET = f"Level-{tower}-{level}"
+
+    # Excel file name from Tower
+    LOCAL_FILE = BASE_FOLDER / f"{tower}.xlsx"
+
+    # Sheet name from Level
+    TEMPLATE_SHEET = level
+
 else:
+
+    LOCAL_FILE = None
     TEMPLATE_SHEET = None
     
 
@@ -293,7 +307,7 @@ def get_sheet():
 
     if TEMPLATE_SHEET not in wb.sheetnames:
         st.error(
-            f"Level sheet '{TEMPLATE_SHEET}' not found in {LOCAL_FILE.name}"
+            f"Sheet '{TEMPLATE_SHEET}' not found in file {LOCAL_FILE.name}"
         )
         st.stop()
 
