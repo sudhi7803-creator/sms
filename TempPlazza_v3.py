@@ -1231,12 +1231,9 @@ def create_pdf(data):
 # PDF REPORT SECTION
 # =====================================================
 
-
 st.subheader(
     "PDF Report"
 )
-
-
 
 
 pdf_tag = st.text_input(
@@ -1245,24 +1242,20 @@ pdf_tag = st.text_input(
 )
 
 
+st.download_button(
+    label="⬇️ Download AJB-TAB PDF",
+
+    data=pdf_bytes,
+
+    file_name=f"AJB_TAB_{pdf_tag}.pdf",
+
+    mime="application/pdf",
+
+    key="pdf_download"
+
+)
 
 
-
- st.download_button(
-
-        label="⬇️ Download AJB-TAB PDF",
-
-        data=pdf_bytes,
-
-        file_name=f"AJB_TAB_{pdf_tag}.pdf",
-
-        mime="application/pdf",
-
-        key="pdf_download"
-
-    )
-
-
-    st.success(
-        "PDF Generated Successfully"
-    )
+st.success(
+    "PDF Generated Successfully"
+)
