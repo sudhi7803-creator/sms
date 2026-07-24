@@ -1276,11 +1276,11 @@ if st.button(
     pdf = create_pdf(data)
 
 
-    pdf_bytes = pdf.output(
+    pdf_bytes = bytes(
+    pdf.output(
         dest="S"
-    ).encode(
-        "latin-1"
     )
+)
 
 
     st.download_button(
@@ -1298,4 +1298,24 @@ if st.button(
 
     st.success(
         "PDF Generated Successfully"
+    )# =====================================================
+# DOWNLOAD EXCEL FILE
+# =====================================================
+
+st.subheader("Download Updated Excel")
+
+if st.session_state.tower:
+
+    excel_file = get_tower_file(
+        st.session_state.tower
     )
+
+    with open(excel_file, "rb") as f:
+
+        st.download_button(
+            label="⬇️ Download Updated Excel",
+            data=f,
+            file_name=f"{st.session_state.tower}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_excel"
+        )
