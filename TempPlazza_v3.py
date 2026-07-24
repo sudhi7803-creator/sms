@@ -228,124 +228,33 @@ st.title(
 st.success(
     "Login system working successfully"
 )# =====================================================
+# =====================================================
 # PART 2 - EXCEL CONNECTION
 # =====================================================
 
 from openpyxl import load_workbook
-from datetime import datetime, date
+from pathlib import Path
+import shutil
 
 
 # =====================================================
 # EXCEL SETTINGS
 # =====================================================
 
+BASE_FOLDER = Path(__file__).parent
 
-LOCAL_FILE = BASE_FOLDER / "TempPlazza.xlsx"
-
-
-# =====================================================
-# PROJECT INFORMATION
-# =====================================================
-
-tower = st.text_input("Tower")
-level = st.text_input("Level")
-
-
-# Default values
-
-TEMPLATE_SHEET = None
-LOCAL_FILE = None
-
-
-# Create Excel file name and sheet name
-
-if tower and level:
-
-    LOCAL_FILE = BASE_FOLDER / "TempPlazza.xlsx"
-
-    TEMPLATE_SHEET = f"Level-{tower}-{level}"
-
-else:
-
-    LOCAL_FILE = None
-    TEMPLATE_SHEET = None
-    
-
-# =====================================================
-# EXCEL FUNCTIONS
-# =====================================================
-
-def open_excel():
-
-    wb = load_workbook(LOCAL_FILE)
-
-    st.write("Excel file:")
-    st.write(LOCAL_FILE)
-
-    st.write("Available sheets:")
-    st.write(wb.sheetnames)
-
-    return wb
-
-def get_sheet():
-
-    st.write("DEBUG: get_sheet started")
-
-    if TEMPLATE_SHEET is None:
-        st.warning("Please enter Tower and Level first")
-        st.stop()
-
-    wb = open_excel()
-
-    st.write("Looking for sheet:")
-    st.write(TEMPLATE_SHEET)
-    
-    st.write("Available sheets:")
-    st.write(wb.sheetnames)
-
-    if TEMPLATE_SHEET not in wb.sheetnames:
-        st.error(
-            f"Sheet '{TEMPLATE_SHEET}' not found in file {LOCAL_FILE.name}"
-        )
-        st.stop()
-
-    ws = wb[TEMPLATE_SHEET]
-
-    return wb, ws
-
-# =====================================================
-# SYNC COPY FUNCTION
-# =====================================================
+MASTER_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
 OUTPUT_FOLDER = BASE_FOLDER / "TempPlazza_Output"
 
-
-def create_sync_copy(tower, level):
-
-    tower_folder = OUTPUT_FOLDER / tower
-
-    tower_folder.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
-    filename = f"{tower}_Level_{level}.xlsx"
-
-    output_file = tower_folder / filename
-
-    shutil.copy(
-        LOCAL_FILE,
-        output_file
-    )
-
-    return output_file
-
+OUTPUT_FOLDER.mkdir(
+    exist_ok=True
+)
 
 
 # =====================================================
 # PROJECT INFORMATION
 # =====================================================
-
 
 st.subheader(
     "Project Information"
@@ -353,14 +262,15 @@ st.subheader(
 
 
 if "tower" not in st.session_state:
-
     st.session_state.tower = ""
 
 
 if "level" not in st.session_state:
-
     st.session_state.level = ""
 
+
+if "page_number" not in st.session_state:
+    st.session_state.page_number = 1
 
 
 col1, col2 = st.columns(2)
@@ -385,6 +295,72 @@ with col2:
 
 
 
+# =====================================================
+# CREATE TOWER FILE
+# =====================================================
+
+def get_tower_file(tower):
+
+    tower_file = OUTPUT_FOLDER / f"{tower}.xlsx"
+
+
+    if not tower_file.exists():
+
+        shutil.copy(
+            MASTER_FILE,
+            tower_file
+        )
+
+
+    return tower_file
+
+
+
+# =====================================================
+# OPEN EXCEL
+# =====================================================
+
+def open_excel():
+
+    tower_file = get_tower_file(
+    st.session_state.tower
+)
+
+wb.save(
+    tower_file
+)
+
+
+
+# =====================================================
+# GET LEVEL SHEET
+# =====================================================
+
+def get_sheet():
+
+    wb = open_excel()
+
+    level_name = st.session_state.level
+
+    # If the level sheet doesn't exist, create it
+    if level_name not in wb.sheetnames:
+
+        # Copy the TEMPLATE sheet
+        source = wb["TEMPLATE"]
+
+        new_sheet = wb.copy_worksheet(source)
+
+        new_sheet.title = level_name
+
+    ws = wb[level_name]
+
+    return wb, ws
+
+# =====================================================
+# LOCK TOWER AND LEVEL
+# =====================================================
+
+
 if st.button(
     "🔒 Lock Tower & Level",
     key="lock_tower_level"
@@ -396,183 +372,101 @@ if st.button(
     st.session_state.level = level
 
 
+    st.session_state.page_number = 1
+
+
     wb, ws = get_sheet()
 
-
-    # Excel locations
 
     ws["G9"] = tower
 
     ws["G7"] = level
 
 
-    wb.save(
-        LOCAL_FILE
-    )
-
-
-    st.success(
-        "Tower and Level saved to Excel"
-    )
-
-
-
-# =====================================================
-# AMBIENT TEMPERATURE
-# =====================================================
-
-
-st.subheader(
-    "Ambient Air Temperature"
+    tower_file = get_tower_file(
+    st.session_state.tower
 )
 
-
-
-col1, col2 = st.columns(2)
-
-
-
-with col1:
-
-    ambient_db = st.text_input(
-        "Ambient DB",
-        key="ambient_db"
-    )
-
-
-with col2:
-
-    ambient_wb = st.text_input(
-        "Ambient WB",
-        key="ambient_wb"
-    )
-
-
-
-if st.button(
-    "🔒 Lock Ambient Temperature",
-    key="lock_ambient"
-):
-
-
-    wb, ws = get_sheet()
-
-
-    # Excel locations
-
-    ws["J17"] = ambient_db
-
-    ws["N17"] = ambient_wb
-
-
-    wb.save(
-        LOCAL_FILE
-    )
-
-
-    st.success(
-        "Ambient temperature updated"
-    )   # =====================================================
-# PART 3 - EQUIPMENT DATA ENTRY
-# =====================================================
-
-
-st.subheader(
-    "Equipment Details"
+wb.save(
+    tower_file
 )
 
-
-
-# Current Excel row memory
-
-if "excel_row" not in st.session_state:
-
-    st.session_state.excel_row = 17
-
-
-
-# Current page memory
-
-if "page_number" not in st.session_state:
-
-    st.session_state.page_number = 1
-
+    st.success(
+        f"Equipment saved in Row {row}"
+    )
 
 
 
 # =====================================================
-# CREATE NEW PAGE
+# CREATE NEXT PAGE AFTER 17 ENTRIES
 # =====================================================
+
 
 def create_new_page():
+
 
     wb = open_excel()
 
 
-    old_sheet = wb[TEMPLATE_SHEET]
+    base_sheet = st.session_state.level
 
 
-    new_name = (
-        f"PAGE_{st.session_state.page_number}"
+    page_no = st.session_state.page_number
+
+
+    new_sheet_name = (
+        f"{base_sheet}_Page_{page_no}"
     )
 
 
-    if new_name not in wb.sheetnames:
+    if new_sheet_name not in wb.sheetnames:
 
 
-        new_sheet = wb.copy_worksheet(
-            old_sheet
-        )
+        source = wb["TEMPLATE"]
 
 
-        new_sheet.title = new_name
+        new_sheet = wb.copy_worksheet(source)
+
+new_sheet.title = new_sheet_name
 
 
-    wb.save(
-        LOCAL_FILE
-    )
+
+    tower_file = get_tower_file(
+    st.session_state.tower
+)
+
+wb.save(
+    tower_file
+)
 
 
 
 def get_active_sheet():
 
+
     wb = open_excel()
 
 
-    sheet_name = (
-        f"PAGE_{st.session_state.page_number}"
-    )
+    if st.session_state.page_number == 1:
 
 
-    if sheet_name in wb.sheetnames:
-
-        ws = wb[sheet_name]
+        ws = wb[
+            st.session_state.level
+        ]
 
 
     else:
 
-        # first page uses template
 
-        if st.session_state.page_number == 1:
-
-            ws = wb[TEMPLATE_SHEET]
-
-            ws.title = sheet_name
+        sheet_name = (
+            f"{st.session_state.level}_Page_{st.session_state.page_number}"
+        )
 
 
-        else:
-
-            create_new_page()
-
-            wb = open_excel()
-
-            ws = wb[sheet_name]
+        ws = wb[sheet_name]
 
 
     return wb, ws
-
-
-
 
 # =====================================================
 # INPUT FORM
@@ -648,77 +542,49 @@ remarks = st.text_input(
 # UPDATE EXCEL BUTTON
 # =====================================================
 
-
 if st.button(
     "💾 Update Equipment Data",
     key="update_equipment"
 ):
 
-
     wb, ws = get_active_sheet()
-
 
     row = st.session_state.excel_row
 
-
-
     # Write data
-
     ws[f"A{row}"] = equipment_tag
-
     ws[f"R{row}"] = room
-
     ws[f"V{row}"] = set_point
-
     ws[f"AB{row}"] = design
-
     ws[f"AJ{row}"] = reading_time
-
     ws[f"AN{row}"] = indoor_db
-
     ws[f"AR{row}"] = indoor_wb
-
     ws[f"AV{row}"] = indoor_rh
-
     ws[f"AZ{row}"] = remarks
 
-
-
-    wb.save(
-        LOCAL_FILE
+    tower_file = get_tower_file(
+        st.session_state.tower
     )
 
-
+    wb.save(tower_file)
 
     st.success(
         f"Equipment saved in Row {row}"
     )
 
-
-
-    # Move next row
-
     st.session_state.excel_row += 1
-
-
-
-    # If row exceeds 33
 
     if st.session_state.excel_row > 33:
 
-
         st.session_state.page_number += 1
-
-
         st.session_state.excel_row = 17
-
 
         create_new_page()
 
-
         st.info(
             f"New page created: PAGE_{st.session_state.page_number}"
-        )# =====================================================
+        )
+# =====================================================
 # PART 4 - PDF REPORT GENERATION
 # =====================================================
 
