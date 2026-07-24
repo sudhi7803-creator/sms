@@ -313,7 +313,10 @@ st.title(
 
 st.success(
     "Login system working successfully"
-)# =====================================================
+)
+
+
+# =====================================================
 # PART 2 - EXCEL CONNECTION MODULE
 # =====================================================
 
@@ -1242,20 +1245,57 @@ pdf_tag = st.text_input(
 )
 
 
-st.download_button(
-    label="⬇️ Download AJB-TAB PDF",
+if st.button(
+    "📄 Generate PDF",
+    key="generate_pdf"
+):
 
-    data=pdf_bytes,
+    data = {
 
-    file_name=f"AJB_TAB_{pdf_tag}.pdf",
+        "tag": pdf_tag,
 
-    mime="application/pdf",
+        "room": st.session_state.get("room",""),
 
-    key="pdf_download"
+        "set_point": st.session_state.get("set_point",""),
 
-)
+        "design": st.session_state.get("design",""),
+
+        "time": st.session_state.get("reading_time",""),
+
+        "db": st.session_state.get("indoor_db",""),
+
+        "wb": st.session_state.get("indoor_wb",""),
+
+        "rh": st.session_state.get("indoor_rh",""),
+
+        "remarks": st.session_state.get("remarks","")
+
+    }
 
 
-st.success(
-    "PDF Generated Successfully"
-)
+    pdf = create_pdf(data)
+
+
+    pdf_bytes = pdf.output(
+        dest="S"
+    ).encode(
+        "latin-1"
+    )
+
+
+    st.download_button(
+        label="⬇️ Download AJB-TAB PDF",
+
+        data=pdf_bytes,
+
+        file_name=f"AJB_TAB_{pdf_tag}.pdf",
+
+        mime="application/pdf",
+
+        key="pdf_download"
+    )
+
+
+    st.success(
+        "PDF Generated Successfully"
+    )
