@@ -254,7 +254,7 @@ if not LOCAL_FILE.exists():
     st.error(f"TempPlazza.xlsx not found.\nLooking for: {LOCAL_FILE}")
     st.stop()
 
-
+TEMPLATE_SHEET = "TEMPLATE"
 
 # =====================================================
 # EXCEL FUNCTIONS
