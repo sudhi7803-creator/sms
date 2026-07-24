@@ -1,5 +1,12 @@
+# =====================================================
+# AJB - TAB TEMPPLAZZA DATA LOGGER
+# PART 1 - LOGIN + BASIC SETTINGS
+# =====================================================
+
+
 import streamlit as st
 from datetime import datetime
+from pathlib import Path
 import os
 import json
 
@@ -12,76 +19,120 @@ COMPANY_NAME = "AJB - TAB"
 CREATOR_NAME = "Sudhin@2026"
 
 
+
 # =====================================================
 # PAGE SETTINGS
 # =====================================================
 
 st.set_page_config(
-    page_title="AJB - TAB",
+    page_title=COMPANY_NAME,
     page_icon="🌡️",
     layout="wide"
 )
 
 
-# =====================================================
-# FILE SETTINGS
-# =====================================================
 
-from pathlib import Path
+# =====================================================
+# FOLDER SETTINGS
+# =====================================================
 
 BASE_FOLDER = Path(__file__).parent
+
 
 STATE_FILE = BASE_FOLDER / "TempPlazza_state.json"
 
 
-if not os.path.exists(BASE_FOLDER):
-    os.makedirs(BASE_FOLDER)
+
+if not BASE_FOLDER.exists():
+
+    BASE_FOLDER.mkdir()
 
 
 
 # =====================================================
-# SAVE / LOAD LOGIN MEMORY
+# LOAD LOGIN MEMORY
 # =====================================================
 
 def load_state():
 
-    if os.path.exists(STATE_FILE):
 
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
+    if STATE_FILE.exists():
+
+        with open(
+            STATE_FILE,
+            "r"
+        ) as file:
+
+            return json.load(file)
+
+
 
     return {
+
         "logged_in": False,
+
         "username": ""
+
     }
 
 
+
+
+
+# =====================================================
+# SAVE LOGIN MEMORY
+# =====================================================
 
 def save_state():
 
+
     data = {
-        "logged_in": st.session_state.logged_in,
-        "username": st.session_state.username
+
+        "logged_in":
+        st.session_state.logged_in,
+
+
+        "username":
+        st.session_state.username
+
     }
 
-    with open(STATE_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+
+    with open(
+        STATE_FILE,
+        "w"
+    ) as file:
+
+
+        json.dump(
+            data,
+            file,
+            indent=4
+        )
+
+
 
 
 
 # =====================================================
-# LOAD SESSION
+# SESSION INITIALIZATION
 # =====================================================
+
 
 if "loaded" not in st.session_state:
 
+
     old = load_state()
+
 
     st.session_state.logged_in = old["logged_in"]
 
+
     st.session_state.username = old["username"]
 
+
     st.session_state.loaded = True
+
 
 
 
@@ -89,13 +140,19 @@ if "loaded" not in st.session_state:
 # USER DATABASE
 # =====================================================
 
+
 if "users" not in st.session_state:
+
 
     st.session_state.users = {
 
-        "admin": "admin@123"
+
+        "admin":
+        "admin@123"
+
 
     }
+
 
 
 
@@ -103,19 +160,27 @@ if "users" not in st.session_state:
 # DESIGN
 # =====================================================
 
+
 st.markdown(
 """
 <style>
 
 h1 {
+
 color:#1E5A96;
+
 text-align:center;
+
 }
+
 
 .stButton button {
 
 background:#1E5A96;
+
 color:white;
+
+font-weight:bold;
 
 }
 
@@ -126,9 +191,11 @@ unsafe_allow_html=True
 
 
 
+
 # =====================================================
 # LOGIN PAGE
 # =====================================================
+
 
 if not st.session_state.logged_in:
 
@@ -161,23 +228,35 @@ if not st.session_state.logged_in:
     ):
 
 
+
         if (
+
             username in st.session_state.users
+
             and
-            st.session_state.users[username] == password
+
+            st.session_state.users[username]
+            ==
+            password
+
         ):
 
 
             st.session_state.logged_in = True
 
+
             st.session_state.username = username
 
+
             save_state()
+
 
             st.rerun()
 
 
+
         else:
+
 
             st.error(
                 "Invalid username or password"
@@ -191,6 +270,8 @@ if not st.session_state.logged_in:
 
 
     st.stop()
+
+
 
 
 
@@ -210,11 +291,15 @@ if st.button(
     key="logout_button"
 ):
 
+
     st.session_state.logged_in = False
+
 
     st.session_state.username = ""
 
+
     save_state()
+
 
     st.rerun()
 
@@ -225,58 +310,85 @@ st.title(
 )
 
 
+
 st.success(
     "Login system working successfully"
 )# =====================================================
-# =====================================================
-# PART 2 - EXCEL CONNECTION
+# PART 2 - EXCEL CONNECTION MODULE
 # =====================================================
 
+
 from openpyxl import load_workbook
-from pathlib import Path
 import shutil
+
 
 
 # =====================================================
 # EXCEL SETTINGS
 # =====================================================
 
-BASE_FOLDER = Path(__file__).parent
 
 MASTER_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
+
 OUTPUT_FOLDER = BASE_FOLDER / "TempPlazza_Output"
+
 
 OUTPUT_FOLDER.mkdir(
     exist_ok=True
 )
 
 
+
+
+# =====================================================
+# SESSION VARIABLES
+# =====================================================
+
+
+if "tower" not in st.session_state:
+
+    st.session_state.tower = ""
+
+
+
+if "level" not in st.session_state:
+
+    st.session_state.level = ""
+
+
+
+if "page_number" not in st.session_state:
+
+    st.session_state.page_number = 1
+
+
+
+if "excel_row" not in st.session_state:
+
+    st.session_state.excel_row = 17
+
+
+
+
+
 # =====================================================
 # PROJECT INFORMATION
 # =====================================================
+
 
 st.subheader(
     "Project Information"
 )
 
 
-if "tower" not in st.session_state:
-    st.session_state.tower = ""
-
-
-if "level" not in st.session_state:
-    st.session_state.level = ""
-
-
-if "page_number" not in st.session_state:
-    st.session_state.page_number = 1
-
 
 col1, col2 = st.columns(2)
 
 
+
 with col1:
+
 
     tower = st.text_input(
         "Tower / Podium",
@@ -285,7 +397,9 @@ with col1:
     )
 
 
+
 with col2:
+
 
     level = st.text_input(
         "Level",
@@ -295,16 +409,24 @@ with col2:
 
 
 
+
+
 # =====================================================
 # CREATE TOWER FILE
 # =====================================================
 
-def get_tower_file(tower):
 
-    tower_file = OUTPUT_FOLDER / f"{tower}.xlsx"
+def get_tower_file(tower_name):
+
+
+    tower_file = (
+        OUTPUT_FOLDER /
+        f"{tower_name}.xlsx"
+    )
 
 
     if not tower_file.exists():
+
 
         shutil.copy(
             MASTER_FILE,
@@ -312,7 +434,11 @@ def get_tower_file(tower):
         )
 
 
+
     return tower_file
+
+
+
 
 
 
@@ -320,41 +446,68 @@ def get_tower_file(tower):
 # OPEN EXCEL
 # =====================================================
 
+
 def open_excel():
 
+
     tower_file = get_tower_file(
-    st.session_state.tower
-)
+        st.session_state.tower
+    )
 
-wb.save(
-    tower_file
-)
+
+    wb = load_workbook(
+        tower_file
+    )
+
+
+    return wb
+
+
+
 
 
 
 # =====================================================
-# GET LEVEL SHEET
+# CREATE LEVEL SHEET
 # =====================================================
+
 
 def get_sheet():
 
+
     wb = open_excel()
+
 
     level_name = st.session_state.level
 
-    # If the level sheet doesn't exist, create it
+
+
     if level_name not in wb.sheetnames:
 
-        # Copy the TEMPLATE sheet
-        source = wb["TEMPLATE"]
 
-        new_sheet = wb.copy_worksheet(source)
+        source = wb.active
+
+
+        new_sheet = wb.copy_worksheet(
+            source
+        )
+
 
         new_sheet.title = level_name
 
+
+
+
     ws = wb[level_name]
 
+
+
     return wb, ws
+
+
+
+
+
 
 # =====================================================
 # LOCK TOWER AND LEVEL
@@ -369,36 +522,57 @@ if st.button(
 
     st.session_state.tower = tower
 
+
     st.session_state.level = level
 
 
     st.session_state.page_number = 1
 
 
+    st.session_state.excel_row = 17
+
+
+
+
     wb, ws = get_sheet()
 
 
+
+    # Excel Header Update
+
     ws["G9"] = tower
+
 
     ws["G7"] = level
 
 
+
+
+
     tower_file = get_tower_file(
-    st.session_state.tower
-)
-
-wb.save(
-    tower_file
-)
-
-    st.success(
-        f"Equipment saved in Row {row}"
+        tower
     )
 
 
 
+    wb.save(
+        tower_file
+    )
+
+
+
+    st.success(
+        f"{tower}.xlsx created with sheet {level}"
+    )
+
+
+
+
+
+
+
 # =====================================================
-# CREATE NEXT PAGE AFTER 17 ENTRIES
+# CREATE NEXT PAGE
 # =====================================================
 
 
@@ -408,43 +582,64 @@ def create_new_page():
     wb = open_excel()
 
 
+
     base_sheet = st.session_state.level
 
 
-    page_no = st.session_state.page_number
+
+    page = st.session_state.page_number
+
 
 
     new_sheet_name = (
-        f"{base_sheet}_Page_{page_no}"
+        f"{base_sheet}_Page_{page}"
     )
+
 
 
     if new_sheet_name not in wb.sheetnames:
 
 
-        source = wb["TEMPLATE"]
+        source = wb[base_sheet]
 
 
-        new_sheet = wb.copy_worksheet(source)
+        new_sheet = wb.copy_worksheet(
+            source
+        )
 
-new_sheet.title = new_sheet_name
+
+        new_sheet.title = new_sheet_name
+
+
 
 
 
     tower_file = get_tower_file(
-    st.session_state.tower
-)
+        st.session_state.tower
+    )
 
-wb.save(
-    tower_file
-)
 
+
+    wb.save(
+        tower_file
+    )
+
+
+
+
+
+
+
+# =====================================================
+# GET ACTIVE SHEET
+# =====================================================
 
 
 def get_active_sheet():
 
 
     wb = open_excel()
+
 
 
     if st.session_state.page_number == 1:
@@ -455,28 +650,47 @@ def get_active_sheet():
         ]
 
 
+
     else:
 
 
         sheet_name = (
-            f"{st.session_state.level}_Page_{st.session_state.page_number}"
+
+            f"{st.session_state.level}"
+            f"_Page_{st.session_state.page_number}"
+
         )
 
 
         ws = wb[sheet_name]
 
 
+
     return wb, ws
 
+
+
+
+
+
 # =====================================================
-# INPUT FORM
+# EQUIPMENT INPUT FORM
 # =====================================================
+
+
+st.subheader(
+    "Equipment Data"
+)
+
 
 
 col1, col2 = st.columns(2)
 
 
+
+
 with col1:
+
 
     equipment_tag = st.text_input(
         "Equipment Tag",
@@ -503,7 +717,9 @@ with col1:
 
 
 
+
 with col2:
+
 
     reading_time = st.text_input(
         "Reading Time",
@@ -530,6 +746,7 @@ with col2:
 
 
 
+
 remarks = st.text_input(
     "Remarks",
     key="remarks"
@@ -538,61 +755,103 @@ remarks = st.text_input(
 
 
 
+
+
+
 # =====================================================
 # UPDATE EXCEL BUTTON
 # =====================================================
+
 
 if st.button(
     "💾 Update Equipment Data",
     key="update_equipment"
 ):
 
+
     wb, ws = get_active_sheet()
+
+
 
     row = st.session_state.excel_row
 
-    # Write data
+
+
     ws[f"A{row}"] = equipment_tag
+
     ws[f"R{row}"] = room
+
     ws[f"V{row}"] = set_point
+
     ws[f"AB{row}"] = design
+
     ws[f"AJ{row}"] = reading_time
+
     ws[f"AN{row}"] = indoor_db
+
     ws[f"AR{row}"] = indoor_wb
+
     ws[f"AV{row}"] = indoor_rh
+
     ws[f"AZ{row}"] = remarks
+
+
+
 
     tower_file = get_tower_file(
         st.session_state.tower
     )
 
-    wb.save(tower_file)
+
+
+    wb.save(
+        tower_file
+    )
+
+
 
     st.success(
         f"Equipment saved in Row {row}"
     )
 
+
+
     st.session_state.excel_row += 1
+
+
+
+
+    # After row 33 create new page
 
     if st.session_state.excel_row > 33:
 
+
         st.session_state.page_number += 1
+
+
         st.session_state.excel_row = 17
+
+
 
         create_new_page()
 
+
+
         st.info(
-            f"New page created: PAGE_{st.session_state.page_number}"
-        )
+            f"New page created: {st.session_state.page_number}"
+        )# =====================================================
+# PART 3 - PDF REPORT GENERATION MODULE
 # =====================================================
-# PART 4 - PDF REPORT GENERATION
+
+
+from fpdf import FPDF
+
+
+
+
 # =====================================================
-
-
-st.subheader(
-    "PDF Report"
-)
-
+# PDF CREATION FUNCTION
+# =====================================================
 
 
 def create_pdf(data):
@@ -601,19 +860,22 @@ def create_pdf(data):
     pdf = FPDF()
 
 
+
     pdf.add_page()
 
 
 
     # -------------------------
-    # Header
+    # HEADER
     # -------------------------
+
 
     pdf.set_fill_color(
         30,
         90,
         150
     )
+
 
     pdf.rect(
         0,
@@ -624,6 +886,7 @@ def create_pdf(data):
     )
 
 
+
     pdf.set_text_color(
         255,
         255,
@@ -631,11 +894,13 @@ def create_pdf(data):
     )
 
 
+
     pdf.set_font(
         "Arial",
         "B",
         18
     )
+
 
 
     pdf.cell(
@@ -647,11 +912,13 @@ def create_pdf(data):
     )
 
 
+
     pdf.set_font(
         "Arial",
         "B",
         12
     )
+
 
 
     pdf.cell(
@@ -671,15 +938,16 @@ def create_pdf(data):
     )
 
 
-    pdf.ln(
-        15
-    )
+
+    pdf.ln(15)
+
 
 
 
     # -------------------------
-    # Project Information
+    # PROJECT INFORMATION
     # -------------------------
+
 
     pdf.set_font(
         "Arial",
@@ -703,30 +971,46 @@ def create_pdf(data):
     )
 
 
+
     info = [
 
-        ("Prepared By",
-        st.session_state.username),
+        (
+            "Prepared By",
+            st.session_state.username
+        ),
 
-        ("Date",
-        datetime.now().strftime(
-            "%Y-%m-%d %H:%M"
-        )),
 
-        ("Tower",
-        st.session_state.tower),
+        (
+            "Date",
+            datetime.now().strftime(
+                "%Y-%m-%d %H:%M"
+            )
+        ),
 
-        ("Level",
-        st.session_state.level),
 
-        ("Page",
-        str(st.session_state.page_number))
+        (
+            "Tower",
+            st.session_state.tower
+        ),
+
+
+        (
+            "Level",
+            st.session_state.level
+        ),
+
+
+        (
+            "Page",
+            str(st.session_state.page_number)
+        )
 
     ]
 
 
 
-    for label,value in info:
+
+    for label, value in info:
 
 
         pdf.cell(
@@ -749,13 +1033,16 @@ def create_pdf(data):
 
 
 
+
     pdf.ln(8)
 
 
 
+
     # -------------------------
-    # Equipment Data
+    # EQUIPMENT DETAILS
     # -------------------------
+
 
     pdf.set_font(
         "Arial",
@@ -772,43 +1059,70 @@ def create_pdf(data):
     )
 
 
+
     pdf.set_font(
         "Arial",
         size=11
     )
 
 
+
     equipment = [
 
-        ("Equipment Tag",
-         data["tag"]),
 
-        ("Room",
-         data["room"]),
+        (
+            "Equipment Tag",
+            data["tag"]
+        ),
 
-        ("Set Point",
-         data["set_point"]),
 
-        ("Design",
-         data["design"]),
+        (
+            "Room",
+            data["room"]
+        ),
 
-        ("Reading Time",
-         data["time"]),
 
-        ("Indoor DB",
-         data["db"]),
+        (
+            "Set Point",
+            data["set_point"]
+        ),
 
-        ("Indoor WB",
-         data["wb"]),
 
-        ("Indoor RH",
-         data["rh"])
+        (
+            "Design",
+            data["design"]
+        ),
+
+
+        (
+            "Reading Time",
+            data["time"]
+        ),
+
+
+        (
+            "Indoor DB",
+            data["db"]
+        ),
+
+
+        (
+            "Indoor WB",
+            data["wb"]
+        ),
+
+
+        (
+            "Indoor RH",
+            data["rh"]
+        )
 
     ]
 
 
 
-    for label,value in equipment:
+
+    for label, value in equipment:
 
 
         pdf.cell(
@@ -831,13 +1145,17 @@ def create_pdf(data):
 
 
 
+
+
     pdf.ln(8)
 
 
 
+
     # -------------------------
-    # Remarks
+    # REMARKS
     # -------------------------
+
 
     pdf.set_font(
         "Arial",
@@ -854,10 +1172,12 @@ def create_pdf(data):
     )
 
 
+
     pdf.set_font(
         "Arial",
         size=11
     )
+
 
 
     pdf.multi_cell(
@@ -869,13 +1189,17 @@ def create_pdf(data):
 
 
 
+
+
     # -------------------------
-    # Footer
+    # FOOTER
     # -------------------------
+
 
     pdf.set_y(
         -20
     )
+
 
 
     pdf.set_font(
@@ -883,6 +1207,7 @@ def create_pdf(data):
         "I",
         9
     )
+
 
 
     pdf.cell(
@@ -899,20 +1224,19 @@ def create_pdf(data):
 
 
 
-# =====================================================
-# STORE LAST ENTRY FOR PDF
-# =====================================================
-
-if "last_equipment" not in st.session_state:
-
-    st.session_state.last_equipment = None
-
 
 
 
 # =====================================================
-# PDF INPUT BUTTON
+# PDF REPORT SECTION
 # =====================================================
+
+
+st.subheader(
+    "PDF Report"
+)
+
+
 
 
 pdf_tag = st.text_input(
@@ -922,92 +1246,17 @@ pdf_tag = st.text_input(
 
 
 
-if st.button(
-    "📄 Generate PDF",
-    key="generate_pdf"
-):
 
 
-    data = {
-
-        "tag": pdf_tag,
-
-        "room":
-        st.session_state.get(
-            "room",
-            ""
-        ),
-
-        "set_point":
-        st.session_state.get(
-            "set_point",
-            ""
-        ),
-
-        "design":
-        st.session_state.get(
-            "design",
-            ""
-        ),
-
-        "time":
-        st.session_state.get(
-            "reading_time",
-            ""
-        ),
-
-        "db":
-        st.session_state.get(
-            "indoor_db",
-            ""
-        ),
-
-        "wb":
-        st.session_state.get(
-            "indoor_wb",
-            ""
-        ),
-
-        "rh":
-        st.session_state.get(
-            "indoor_rh",
-            ""
-        ),
-
-        "remarks":
-        st.session_state.get(
-            "remarks",
-            ""
-        )
-
-    }
-
-
-
-    pdf = create_pdf(
-        data
-    )
-
-
-    pdf_output = pdf.output(
-        dest="S"
-    ).encode(
-        "latin-1"
-    )
-
-
-
-    st.download_button(
+ st.download_button(
 
         label="⬇️ Download AJB-TAB PDF",
 
-        data=pdf_output,
+        data=pdf_bytes,
 
-        file_name=
-        f"AJB_TAB_{pdf_tag}.pdf",
+        file_name=f"AJB_TAB_{pdf_tag}.pdf",
 
-        mime=
-        "application/pdf",
+        mime="application/pdf",
 
         key="pdf_download"
 
@@ -1015,5 +1264,5 @@ if st.button(
 
 
     st.success(
-        "PDF ready"
+        "PDF Generated Successfully"
     )
