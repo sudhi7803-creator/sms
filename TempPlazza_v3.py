@@ -240,21 +240,18 @@ from datetime import datetime, date
 # EXCEL SETTINGS
 # =====================================================
 
-LOCAL_FILE = os.path.join(
-    BASE_FOLDER,
-    "TempPlazza.xlsx"
-)
+from pathlib import Path
 
+BASE_FOLDER = Path(__file__).parent
+LOCAL_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
-TEMPLATE_SHEET = "TEMPLATE"
+st.write("BASE_FOLDER:", BASE_FOLDER)
+st.write("Files in BASE_FOLDER:")
+for f in BASE_FOLDER.iterdir():
+    st.write("-", f.name)
 
-
-if not os.path.exists(LOCAL_FILE):
-
-    st.error(
-        "TempPlazza.xlsx not found"
-    )
-
+if not LOCAL_FILE.exists():
+    st.error(f"TempPlazza.xlsx not found.\nLooking for: {LOCAL_FILE}")
     st.stop()
 
 
