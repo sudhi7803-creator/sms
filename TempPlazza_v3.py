@@ -261,11 +261,9 @@ LOCAL_FILE = None
 
 if tower and level:
 
-    # Excel file name from Tower
-    LOCAL_FILE = BASE_FOLDER / f"{tower}.xlsx"
+    LOCAL_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
-    # Sheet name from Level
-    TEMPLATE_SHEET = level
+    TEMPLATE_SHEET = f"Level-{tower}-{level}"
 
 else:
 
