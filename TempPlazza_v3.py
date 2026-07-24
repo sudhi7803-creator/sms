@@ -27,12 +27,11 @@ st.set_page_config(
 # FILE SETTINGS
 # =====================================================
 
-BASE_FOLDER = r"C:\Users\DELL\OneDrive\TempPlazzaFolder"
+from pathlib import Path
 
-STATE_FILE = os.path.join(
-    BASE_FOLDER,    
-    "TempPlazza_state.json"
-)
+BASE_FOLDER = Path(__file__).parent
+
+STATE_FILE = BASE_FOLDER / "TempPlazza_state.json"
 
 
 if not os.path.exists(BASE_FOLDER):
@@ -240,54 +239,94 @@ from datetime import datetime, date
 # EXCEL SETTINGS
 # =====================================================
 
-from pathlib import Path
 
-BASE_FOLDER = Path(__file__).parent
 LOCAL_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
-st.write("BASE_FOLDER:", BASE_FOLDER)
-st.write("Files in BASE_FOLDER:")
-for f in BASE_FOLDER.iterdir():
-    st.write("-", f.name)
 
-if not LOCAL_FILE.exists():
-    st.error(f"TempPlazza.xlsx not found.\nLooking for: {LOCAL_FILE}")
-    st.stop()
+# =====================================================
+# PROJECT INFORMATION
+# =====================================================
 
-TEMPLATE_SHEET = "TEMPLATE"
+tower = st.text_input("Tower")
+level = st.text_input("Level")
+
+
+# Create Excel sheet name after getting inputs
+
+if tower and level:
+    TEMPLATE_SHEET = f"Level-{tower}-{level}"
+else:
+    TEMPLATE_SHEET = None
+    
 
 # =====================================================
 # EXCEL FUNCTIONS
 # =====================================================
 
-
 def open_excel():
 
-    return load_workbook(
-        LOCAL_FILE
-    )
+    wb = load_workbook(LOCAL_FILE)
 
+    st.write("Excel file:")
+    st.write(LOCAL_FILE)
 
+    st.write("Available sheets:")
+    st.write(wb.sheetnames)
+
+    return wb
 
 def get_sheet():
 
+    st.write("DEBUG: get_sheet started")
+
+    if TEMPLATE_SHEET is None:
+        st.warning("Please enter Tower and Level first")
+        st.stop()
 
     wb = open_excel()
 
+    st.write("Looking for sheet:")
+    st.write(TEMPLATE_SHEET)
+    
+    st.write("Available sheets:")
+    st.write(wb.sheetnames)
 
     if TEMPLATE_SHEET not in wb.sheetnames:
-
         st.error(
-            "TEMPLATE sheet not found in Excel"
+            f"Level sheet '{TEMPLATE_SHEET}' not found in {LOCAL_FILE.name}"
         )
-
         st.stop()
-
 
     ws = wb[TEMPLATE_SHEET]
 
-
     return wb, ws
+
+# =====================================================
+# SYNC COPY FUNCTION
+# =====================================================
+
+OUTPUT_FOLDER = BASE_FOLDER / "TempPlazza_Output"
+
+
+def create_sync_copy(tower, level):
+
+    tower_folder = OUTPUT_FOLDER / tower
+
+    tower_folder.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    filename = f"{tower}_Level_{level}.xlsx"
+
+    output_file = tower_folder / filename
+
+    shutil.copy(
+        LOCAL_FILE,
+        output_file
+    )
+
+    return output_file
 
 
 
