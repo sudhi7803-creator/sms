@@ -435,7 +435,32 @@ MAIN_OUTPUT.mkdir(
     exist_ok=True
 )
 
+# =====================================================
+# OPEN SUMMARY WORKBOOK
+# =====================================================
 
+
+def open_summary():
+
+    if not SUMMARY_FILE.exists():
+
+        wb = Workbook()
+
+        ws = wb.active
+
+        ws.title = "Summary"
+
+        wb.save(
+            SUMMARY_FILE
+        )
+
+
+    wb = load_workbook(
+        SUMMARY_FILE
+    )
+
+
+    return wb
 
 
 
