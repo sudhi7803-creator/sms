@@ -775,28 +775,17 @@ if st.button(
     wb, ws = get_active_sheet()
 
 
-
     row = st.session_state.excel_row
 
-
-
-    ws[f"A{row}"] = equipment_tag
-
-    ws[f"R{row}"] = room
-
-    ws[f"V{row}"] = set_point
-
-    ws[f"AB{row}"] = design
-
-    ws[f"AJ{row}"] = reading_time
-
-    ws[f"AN{row}"] = indoor_db
-
-    ws[f"AR{row}"] = indoor_wb
-
-    ws[f"AV{row}"] = indoor_rh
-
-    ws[f"AZ{row}"] = remarks
+ws[f"A{row}"] = equipment_tag
+ws[f"R{row}"] = room
+ws[f"V{row}"] = set_point
+ws[f"AB{row}"] = design
+ws[f"AJ{row}"] = reading_time
+ws[f"AN{row}"] = indoor_db
+ws[f"AR{row}"] = indoor_wb
+ws[f"AV{row}"] = indoor_rh
+ws[f"AZ{row}"] = remarks
 
 
 
