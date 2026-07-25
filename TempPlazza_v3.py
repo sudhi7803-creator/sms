@@ -765,71 +765,64 @@ remarks = st.text_input(
 # UPDATE EXCEL BUTTON
 # =====================================================
 
-
 if st.button(
     "💾 Update Equipment Data",
     key="update_equipment"
 ):
 
-
     wb, ws = get_active_sheet()
-
 
     row = st.session_state.excel_row
 
-ws[f"A{row}"] = equipment_tag
-ws[f"R{row}"] = room
-ws[f"V{row}"] = set_point
-ws[f"AB{row}"] = design
-ws[f"AJ{row}"] = reading_time
-ws[f"AN{row}"] = indoor_db
-ws[f"AR{row}"] = indoor_wb
-ws[f"AV{row}"] = indoor_rh
-ws[f"AZ{row}"] = remarks
 
+    ws[f"A{row}"] = equipment_tag
+    ws[f"R{row}"] = room
+    ws[f"V{row}"] = set_point
+    ws[f"AB{row}"] = design
+    ws[f"AJ{row}"] = reading_time
+    ws[f"AN{row}"] = indoor_db
+    ws[f"AR{row}"] = indoor_wb
+    ws[f"AV{row}"] = indoor_rh
+    ws[f"AZ{row}"] = remarks
 
 
 
     tower_file = get_tower_file(
-    st.session_state.tower
-)
+        st.session_state.tower
+    )
 
 
-wb.save(
-    tower_file
-)
-
-
-st.info(
-    f"Saved File: {tower_file}"
-)
-
-
-st.success(
-    f"Equipment saved in Row {row}"
-)
-
-
-st.session_state.excel_row += 1
-
-
-
-# After row 33 create new page
-
-if st.session_state.excel_row > 33:
-
-    st.session_state.page_number += 1
-
-
-    st.session_state.excel_row = 17
-
-
-    create_new_page()
+    wb.save(
+        tower_file
+    )
 
 
     st.info(
-        f"New page created: {st.session_state.page_number}"
+        f"Saved File: {tower_file}"
     )
+
+
+    st.success(
+        f"Equipment saved in Row {row}"
+    )
+
+
+    st.session_state.excel_row += 1
+
+
+
+    if st.session_state.excel_row > 33:
+
+        st.session_state.page_number += 1
+
+        st.session_state.excel_row = 17
+
+        create_new_page()
+
+
+        st.info(
+            f"New page created: {st.session_state.page_number}"
+        )
 # =====================================================
 # READ EQUIPMENT FROM EXCEL
 # =====================================================
