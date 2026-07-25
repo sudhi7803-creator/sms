@@ -331,16 +331,17 @@ with st.sidebar:
 
         st.download_button(
 
-            label="⬇️ Download Excel",
+    label="⬇️ Download Excel",
 
-            data=st.session_state.excel_ready,
+    data=st.session_state.excel_ready,
 
-            file_name="TempPlazza_Report.xlsx",
+    file_name="TempPlazza_Report.xlsx",
 
-            mime=
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 
-        )
+    key="sidebar_excel_download"
+    
+    )
 
 
     else:
@@ -378,154 +379,17 @@ with st.sidebar:
 
         st.download_button(
 
-            label="⬇️ Download PDF",
+    label="⬇️ Download PDF",
 
-            data=st.session_state.pdf_ready,
+    data=st.session_state.pdf_ready,
 
-            file_name="TempPlazza_Report.pdf",
+    file_name="TempPlazza_Report.pdf",
 
-            mime="application/pdf"
+    mime="application/pdf",
 
-        )
+    key="sidebar_pdf_download"
 
-
-
-
-
-
-    # ---------------------------------
-    # ADMIN PANEL
-    # ---------------------------------
-
-
-    if st.session_state.username == ADMIN_USER:
-
-
-        st.divider()
-
-
-        st.subheader(
-            "🔐 Admin Panel"
-        )
-
-
-
-        new_user = st.text_input(
-            "New Username"
-        )
-
-
-
-        new_password = st.text_input(
-            "New Password",
-            type="password"
-        )
-
-
-
-        if st.button(
-            "Add User"
-        ):
-
-
-            if new_user and new_password:
-
-
-                st.session_state.users[new_user] = new_password
-
-                save_users()
-
-
-                st.success(
-                    "User Added"
-                )
-
-
-
-
-
-        remove_user = st.text_input(
-            "Remove User"
-        )
-
-
-
-        if st.button(
-            "Remove User"
-        ):
-
-
-            if (
-
-                remove_user in st.session_state.users
-
-                and
-
-                remove_user != ADMIN_USER
-
-            ):
-
-
-                del st.session_state.users[remove_user]
-
-                save_users()
-
-
-                st.success(
-                    "User Removed"
-                )
-
-
-
-        change_user = st.text_input(
-            "Change Password User"
-        )
-
-
-        change_password = st.text_input(
-            "New Password",
-            type="password"
-        )
-
-
-
-        if st.button(
-            "Change Password"
-        ):
-
-
-            if change_user in st.session_state.users:
-
-
-                st.session_state.users[change_user] = change_password
-
-
-                save_users()
-
-
-                st.success(
-                    "Password Updated"
-                )
-
-
-
-    st.divider()
-
-
-
-    if st.button(
-        "🚪 Logout"
-    ):
-
-
-        st.session_state.logged_in = False
-
-        st.session_state.username = ""
-
-        st.rerun()
-
-
-
+)
 
 # =====================================================
 # MAIN APPLICATION START
@@ -616,22 +480,6 @@ if "main_page" not in st.session_state:
 # =====================================================
 # CREATE TOWER WORKBOOK
 # =====================================================
-
-
-def get_tower_file():
-
-
-
-    file = (
-        MAIN_OUTPUT /
-        f"{st.session_state.tower}.xlsx"
-    )
-
-
-
-    if not file.exists():
-
-        MASTER_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
 
 def get_tower_file():
