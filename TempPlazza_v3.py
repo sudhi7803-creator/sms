@@ -978,41 +978,26 @@ st.session_state.summary_row += 1
 
     # MAIN WORKBOOK PAGE LIMIT
 
-    if st.session_state.main_row > 33:
+if st.session_state.main_row > 33:
 
+    st.session_state.main_page += 1
 
+    st.session_state.main_row = 17
 
-        st.session_state.main_page += 1
+    create_main_next_page()
 
-
-        st.session_state.main_row = 17
-
-
-        create_main_next_page()
-
-
-
-        st.info(
-            "New Main Workbook Page Created"
-        )
-
-
-
-
-
-
+    st.info(
+        "New Main Workbook Page Created"
+    )
     # SUMMARY LIMIT 23
 
+if st.session_state.summary_row > 24:
 
-    if st.session_state.summary_row > 24:
+    st.session_state.summary_row = 2
 
-
-        st.session_state.summary_row = 2
-
-
-        st.info(
-            "New Summary Sheet Required"
-        )
+    st.info(
+        "New Summary Sheet Required"
+    )
 # =====================================================
 # PART 3
 # DASHBOARD + SUMMARY PDF REPORT
