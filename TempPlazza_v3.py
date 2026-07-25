@@ -7,10 +7,12 @@
 
 
 import streamlit as st
-from pathlib import Path
 from datetime import datetime
-import json
+from pathlib import Path
 import os
+import json
+
+from openpyxl import load_workbook, Workbook
 
 
 # =====================================================
@@ -456,7 +458,9 @@ def open_summary():
 
 
     wb = load_workbook(
-        SUMMARY_FILE
+        SUMMARY_FILE,
+        read_only=False,
+        data_only=False
     )
 
 
@@ -937,7 +941,7 @@ if st.button(
 swb = open_summary()
 
 
-# Always get a real worksheet
+# Force Summary worksheet
 
 if "Summary" in swb.sheetnames:
 
@@ -950,12 +954,12 @@ else:
     )
 
 
-# Check worksheet type
+# Debug check
 
 if not hasattr(sws, "cell"):
 
     st.error(
-        "Summary sheet is not a valid Excel worksheet"
+        "Summary worksheet loading problem"
     )
 
     st.stop()
@@ -976,6 +980,10 @@ if sws is None:
 srow = st.session_state.summary_row
 
 
+st.write(
+    "SUMMARY SHEET TYPE:",
+    type(sws)
+)
 
 sws[f"A{srow}"] = datetime.now().date()
 
