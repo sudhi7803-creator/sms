@@ -1268,16 +1268,65 @@ if st.button(
     key="generate_pdf"
 ):
 
-    data = get_equipment_from_excel(
-    pdf_tag
-)
+    data = {
+
+        "tag": st.session_state.get("pdf_tag",""),
+
+        "room": st.session_state.get("room",""),
+
+        "set_point": st.session_state.get("set_point",""),
+
+        "design": st.session_state.get("design",""),
+
+        "time": st.session_state.get("reading_time",""),
+
+        "db": st.session_state.get("indoor_db",""),
+
+        "wb": st.session_state.get("indoor_wb",""),
+
+        "rh": st.session_state.get("indoor_rh",""),
+
+        "remarks": st.session_state.get("remarks","")
+
+    }
 
 
-if data is None:
+    if data["tag"] == "":
 
-    st.error(
-        "Equipment tag not found in Excel"
-    )
+        st.error(
+            "Please enter Equipment Tag"
+        )
+
+    else:
+
+        pdf = create_pdf(data)
+
+
+        pdf_bytes = pdf.output(
+            dest="S"
+        ).encode(
+            "latin-1"
+        )
+
+
+        st.download_button(
+
+            label="⬇️ Download AJB-TAB PDF",
+
+            data=pdf_bytes,
+
+            file_name=f"AJB_TAB_{data['tag']}.pdf",
+
+            mime="application/pdf",
+
+            key="pdf_download"
+
+        )
+
+
+        st.success(
+            "PDF Generated Successfully"
+        )
 
     st.stop()
 
