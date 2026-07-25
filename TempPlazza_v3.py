@@ -802,12 +802,11 @@ if st.button(
 
 
     tower_file = get_tower_file(
-        st.session_state.tower
-    )
+    st.session_state.tower
+)
 
 
-
-    wb.save(
+wb.save(
     tower_file
 )
 
@@ -822,32 +821,26 @@ st.success(
 )
 
 
-
-    st.session_state.excel_row += 1
-
+st.session_state.excel_row += 1
 
 
 
-    # After row 33 create new page
+# After row 33 create new page
 
-    if st.session_state.excel_row > 33:
+if st.session_state.excel_row > 33:
 
-
-        st.session_state.page_number += 1
-
-
-        st.session_state.excel_row = 17
+    st.session_state.page_number += 1
 
 
-
-        create_new_page()
-
+    st.session_state.excel_row = 17
 
 
-        st.info(
-            f"New page created: {st.session_state.page_number}"
-        )
+    create_new_page()
 
+
+    st.info(
+        f"New page created: {st.session_state.page_number}"
+    )
 # =====================================================
 # READ EQUIPMENT FROM EXCEL
 # =====================================================
