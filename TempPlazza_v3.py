@@ -808,14 +808,18 @@ if st.button(
 
 
     wb.save(
-        tower_file
-    )
+    tower_file
+)
 
 
+st.info(
+    f"Saved File: {tower_file}"
+)
 
-    st.success(
-        f"Equipment saved in Row {row}"
-    )
+
+st.success(
+    f"Equipment saved in Row {row}"
+)
 
 
 
@@ -842,7 +846,46 @@ if st.button(
 
         st.info(
             f"New page created: {st.session_state.page_number}"
-        )# =====================================================
+        )
+
+# =====================================================
+# READ EQUIPMENT FROM EXCEL
+# =====================================================
+
+def get_equipment_from_excel(tag):
+
+    wb, ws = get_active_sheet()
+
+
+    for row in range(17,34):
+
+        if ws[f"A{row}"].value == tag:
+
+            return {
+
+                "tag": ws[f"A{row}"].value,
+
+                "room": ws[f"R{row}"].value,
+
+                "set_point": ws[f"V{row}"].value,
+
+                "design": ws[f"AB{row}"].value,
+
+                "time": ws[f"AJ{row}"].value,
+
+                "db": ws[f"AN{row}"].value,
+
+                "wb": ws[f"AR{row}"].value,
+
+                "rh": ws[f"AV{row}"].value,
+
+                "remarks": ws[f"AZ{row}"].value
+
+            }
+
+
+    return None
+# =====================================================
 # PART 3 - PDF REPORT GENERATION MODULE
 # =====================================================
 
@@ -1250,28 +1293,18 @@ if st.button(
     key="generate_pdf"
 ):
 
-    data = {
+    data = get_equipment_from_excel(
+    pdf_tag
+)
 
-        "tag": pdf_tag,
 
-        "room": st.session_state.get("room",""),
+if data is None:
 
-        "set_point": st.session_state.get("set_point",""),
+    st.error(
+        "Equipment tag not found in Excel"
+    )
 
-        "design": st.session_state.get("design",""),
-
-        "time": st.session_state.get("reading_time",""),
-
-        "db": st.session_state.get("indoor_db",""),
-
-        "wb": st.session_state.get("indoor_wb",""),
-
-        "rh": st.session_state.get("indoor_rh",""),
-
-        "remarks": st.session_state.get("remarks","")
-
-    }
-
+    st.stop()
 
     pdf = create_pdf(data)
 
@@ -1280,7 +1313,7 @@ if st.button(
     pdf.output(
         dest="S"
     )
-)
+    )
 
 
     st.download_button(
