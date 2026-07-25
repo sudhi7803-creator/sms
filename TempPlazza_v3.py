@@ -905,74 +905,76 @@ if st.button(
 
 
 
-    # -----------------------------
-    # SUMMARY WORKBOOK
-    # -----------------------------
+   # -----------------------------
+# SUMMARY WORKBOOK
+# -----------------------------
 
 
+swb = open_summary()
 
-    swb = open_summary()
 
+# Check Summary sheet exists
+
+if "Summary" not in swb.sheetnames:
+
+    sws = swb.create_sheet(
+        "Summary"
+    )
+
+else:
 
     sws = swb["Summary"]
 
 
 
-    srow = st.session_state.summary_row
+srow = st.session_state.summary_row
 
 
 
-    sws[f"A{srow}"] = datetime.now().date()
+sws[f"A{srow}"] = datetime.now().date()
 
-    sws[f"B{srow}"] = st.session_state.username
+sws[f"B{srow}"] = st.session_state.username
 
-    sws[f"C{srow}"] = st.session_state.tower
+sws[f"C{srow}"] = st.session_state.tower
 
-    sws[f"D{srow}"] = st.session_state.level
+sws[f"D{srow}"] = st.session_state.level
 
-    sws[f"E{srow}"] = equipment_tag
+sws[f"E{srow}"] = equipment_tag
 
-    sws[f"F{srow}"] = room
+sws[f"F{srow}"] = room
 
-    sws[f"G{srow}"] = set_point
+sws[f"G{srow}"] = set_point
 
-    sws[f"H{srow}"] = design
+sws[f"H{srow}"] = design
 
-    sws[f"I{srow}"] = reading_time
+sws[f"I{srow}"] = reading_time
 
-    sws[f"J{srow}"] = indoor_db
+sws[f"J{srow}"] = indoor_db
 
-    sws[f"K{srow}"] = indoor_wb
+sws[f"K{srow}"] = indoor_wb
 
-    sws[f"L{srow}"] = indoor_rh
+sws[f"L{srow}"] = indoor_rh
 
-    sws[f"M{srow}"] = remarks
-
-
-
-    swb.save(
-        SUMMARY_FILE
-    )
+sws[f"M{srow}"] = remarks
 
 
 
+swb.save(
+    SUMMARY_FILE
+)
 
 
 
-    st.success(
-        f"Saved Equipment Row {row}"
-    )
+st.success(
+    f"Saved Equipment Row {row}"
+)
 
 
 
-    st.session_state.main_row += 1
+st.session_state.main_row += 1
 
 
-    st.session_state.summary_row += 1
-
-
-
-
+st.session_state.summary_row += 1
 
     # MAIN WORKBOOK PAGE LIMIT
 
