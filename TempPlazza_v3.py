@@ -1,23 +1,16 @@
 # =====================================================
 # AJB - TAB TEMPPLAZZA DATA LOGGER
-# PART 1 - LOGIN + BASIC SETTINGS
+# SINGLE MODULE
+# PART 1
+# LOGIN + ADMIN + SIDEBAR + SETTINGS
 # =====================================================
 
 
 import streamlit as st
-from datetime import datetime
 from pathlib import Path
-import os
+from datetime import datetime
 import json
-
-
-# =====================================================
-# APP INFORMATION
-# =====================================================
-
-COMPANY_NAME = "AJB - TAB"
-CREATOR_NAME = "Sudhin@2026"
-
+import os
 
 
 # =====================================================
@@ -25,7 +18,7 @@ CREATOR_NAME = "Sudhin@2026"
 # =====================================================
 
 st.set_page_config(
-    page_title=COMPANY_NAME,
+    page_title="TempPlazza",
     page_icon="🌡️",
     layout="wide"
 )
@@ -33,106 +26,37 @@ st.set_page_config(
 
 
 # =====================================================
-# FOLDER SETTINGS
+# APPLICATION INFORMATION
 # =====================================================
+
+APP_NAME = "AJB - TAB TempPlazza"
+
+ADMIN_USER = "admin"
+
 
 BASE_FOLDER = Path(__file__).parent
 
 
-STATE_FILE = BASE_FOLDER / "TempPlazza_state.json"
+REPORT_FOLDER = BASE_FOLDER / "Reports"
+
+PDF_FOLDER = REPORT_FOLDER / "PDF"
+
+EXCEL_FOLDER = REPORT_FOLDER / "Excel"
+
+
+for folder in [
+    REPORT_FOLDER,
+    PDF_FOLDER,
+    EXCEL_FOLDER
+]:
+
+    folder.mkdir(
+        exist_ok=True
+    )
 
 
 
-if not BASE_FOLDER.exists():
-
-    BASE_FOLDER.mkdir()
-
-
-
-# =====================================================
-# LOAD LOGIN MEMORY
-# =====================================================
-
-def load_state():
-
-
-    if STATE_FILE.exists():
-
-        with open(
-            STATE_FILE,
-            "r"
-        ) as file:
-
-            return json.load(file)
-
-
-
-    return {
-
-        "logged_in": False,
-
-        "username": ""
-
-    }
-
-
-
-
-
-# =====================================================
-# SAVE LOGIN MEMORY
-# =====================================================
-
-def save_state():
-
-
-    data = {
-
-        "logged_in":
-        st.session_state.logged_in,
-
-
-        "username":
-        st.session_state.username
-
-    }
-
-
-    with open(
-        STATE_FILE,
-        "w"
-    ) as file:
-
-
-        json.dump(
-            data,
-            file,
-            indent=4
-        )
-
-
-
-
-
-# =====================================================
-# SESSION INITIALIZATION
-# =====================================================
-
-
-if "loaded" not in st.session_state:
-
-
-    old = load_state()
-
-
-    st.session_state.logged_in = old["logged_in"]
-
-
-    st.session_state.username = old["username"]
-
-
-    st.session_state.loaded = True
-
+USER_FILE = BASE_FOLDER / "users.json"
 
 
 
@@ -141,17 +65,78 @@ if "loaded" not in st.session_state:
 # =====================================================
 
 
-if "users" not in st.session_state:
+def load_users():
+
+    if USER_FILE.exists():
+
+        with open(
+            USER_FILE,
+            "r"
+        ) as f:
+
+            return json.load(f)
 
 
-    st.session_state.users = {
-
+    return {
 
         "admin":
         "admin@123"
 
-
     }
+
+
+
+
+def save_users():
+
+    with open(
+        USER_FILE,
+        "w"
+    ) as f:
+
+        json.dump(
+            st.session_state.users,
+            f,
+            indent=4
+        )
+
+
+
+
+
+# =====================================================
+# SESSION START
+# =====================================================
+
+
+if "users" not in st.session_state:
+
+    st.session_state.users = load_users()
+
+
+
+if "logged_in" not in st.session_state:
+
+    st.session_state.logged_in = False
+
+
+
+if "username" not in st.session_state:
+
+    st.session_state.username = ""
+
+
+
+if "pdf_ready" not in st.session_state:
+
+    st.session_state.pdf_ready = None
+
+
+
+if "excel_ready" not in st.session_state:
+
+    st.session_state.excel_ready = None
+
 
 
 
@@ -165,29 +150,43 @@ st.markdown(
 """
 <style>
 
-h1 {
 
-color:#1E5A96;
+[data-testid="stSidebar"] {
+
+background-color:#f5f7fa;
+
+}
+
+
+.card {
+
+padding:20px;
+
+border-radius:15px;
+
+background:white;
+
+box-shadow:0px 2px 8px #cccccc;
 
 text-align:center;
 
 }
 
 
-.stButton button {
 
-background:#1E5A96;
+button {
 
-color:white;
-
-font-weight:bold;
+border-radius:10px !important;
 
 }
+
+
 
 </style>
 """,
 unsafe_allow_html=True
 )
+
 
 
 
@@ -200,14 +199,16 @@ unsafe_allow_html=True
 if not st.session_state.logged_in:
 
 
+
     st.title(
-        COMPANY_NAME
+        APP_NAME
     )
 
 
     st.subheader(
         "Temperature Data Logger"
     )
+
 
 
     username = st.text_input(
@@ -222,9 +223,9 @@ if not st.session_state.logged_in:
 
 
 
+
     if st.button(
-        "🔐 Login",
-        key="login_button"
+        "🔐 Login"
     ):
 
 
@@ -244,11 +245,12 @@ if not st.session_state.logged_in:
 
             st.session_state.logged_in = True
 
-
             st.session_state.username = username
 
 
-            save_state()
+            st.success(
+                "Login Successful"
+            )
 
 
             st.rerun()
@@ -259,14 +261,15 @@ if not st.session_state.logged_in:
 
 
             st.error(
-                "Invalid username or password"
+                "Invalid Username or Password"
             )
 
 
 
-    st.write(
-        f"Created by {CREATOR_NAME}"
+    st.caption(
+        "AJB - TAB TempPlazza"
     )
+
 
 
     st.stop()
@@ -276,48 +279,271 @@ if not st.session_state.logged_in:
 
 
 # =====================================================
-# AFTER LOGIN
+# SIDEBAR MENU
 # =====================================================
+
+
+with st.sidebar:
+
+
+    st.title(
+        "☰ TempPlazza Menu"
+    )
+
+
+
+    st.write(
+        f"User : {st.session_state.username}"
+    )
+
+
+
+    st.divider()
+
+
+
+    # ---------------------------------
+    # Dashboard Menu
+    # ---------------------------------
+
+
+    if st.button(
+        "📊 Dashboard"
+    ):
+
+        st.session_state.page = "dashboard"
+
+
+
+    # ---------------------------------
+    # Excel Download
+    # ---------------------------------
+
+
+    st.subheader(
+        "Excel"
+    )
+
+
+
+    if st.session_state.excel_ready:
+
+
+        st.download_button(
+
+            label="⬇️ Download Excel",
+
+            data=st.session_state.excel_ready,
+
+            file_name="TempPlazza_Report.xlsx",
+
+            mime=
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+        )
+
+
+    else:
+
+        st.info(
+            "Excel will appear after update"
+        )
+
+
+
+
+
+    # ---------------------------------
+    # PDF
+    # ---------------------------------
+
+
+    st.subheader(
+        "Reports"
+    )
+
+
+
+    if st.button(
+        "📄 Generate PDF"
+    ):
+
+
+        st.session_state.make_pdf = True
+
+
+
+    if st.session_state.pdf_ready:
+
+
+        st.download_button(
+
+            label="⬇️ Download PDF",
+
+            data=st.session_state.pdf_ready,
+
+            file_name="TempPlazza_Report.pdf",
+
+            mime="application/pdf"
+
+        )
+
+
+
+
+
+
+    # ---------------------------------
+    # ADMIN PANEL
+    # ---------------------------------
+
+
+    if st.session_state.username == ADMIN_USER:
+
+
+        st.divider()
+
+
+        st.subheader(
+            "🔐 Admin Panel"
+        )
+
+
+
+        new_user = st.text_input(
+            "New Username"
+        )
+
+
+
+        new_password = st.text_input(
+            "New Password",
+            type="password"
+        )
+
+
+
+        if st.button(
+            "Add User"
+        ):
+
+
+            if new_user and new_password:
+
+
+                st.session_state.users[new_user] = new_password
+
+                save_users()
+
+
+                st.success(
+                    "User Added"
+                )
+
+
+
+
+
+        remove_user = st.text_input(
+            "Remove User"
+        )
+
+
+
+        if st.button(
+            "Remove User"
+        ):
+
+
+            if (
+
+                remove_user in st.session_state.users
+
+                and
+
+                remove_user != ADMIN_USER
+
+            ):
+
+
+                del st.session_state.users[remove_user]
+
+                save_users()
+
+
+                st.success(
+                    "User Removed"
+                )
+
+
+
+        change_user = st.text_input(
+            "Change Password User"
+        )
+
+
+        change_password = st.text_input(
+            "New Password",
+            type="password"
+        )
+
+
+
+        if st.button(
+            "Change Password"
+        ):
+
+
+            if change_user in st.session_state.users:
+
+
+                st.session_state.users[change_user] = change_password
+
+
+                save_users()
+
+
+                st.success(
+                    "Password Updated"
+                )
+
+
+
+    st.divider()
+
+
+
+    if st.button(
+        "🚪 Logout"
+    ):
+
+
+        st.session_state.logged_in = False
+
+        st.session_state.username = ""
+
+        st.rerun()
+
+
+
+
+# =====================================================
+# MAIN APPLICATION START
+# =====================================================
+
+
+st.title(
+    "TempPlazza Dashboard"
+)
 
 
 st.success(
     f"Welcome {st.session_state.username}"
 )
-
-
-
-if st.button(
-    "Logout",
-    key="logout_button"
-):
-
-
-    st.session_state.logged_in = False
-
-
-    st.session_state.username = ""
-
-
-    save_state()
-
-
-    st.rerun()
-
-
-
-st.title(
-    "TempPlazza Data Logger"
-)
-
-
-
-st.success(
-    "Login system working successfully"
-)
-
-
 # =====================================================
-# PART 2 - EXCEL CONNECTION MODULE
+# PART 2
+# MAIN WORKBOOK + SUMMARY WORKBOOK
+# EQUIPMENT ENTRY MODULE
 # =====================================================
 
 
@@ -327,19 +553,24 @@ import shutil
 
 
 # =====================================================
-# EXCEL SETTINGS
+# FILE SETTINGS
 # =====================================================
 
 
 MASTER_FILE = BASE_FOLDER / "TempPlazza.xlsx"
 
 
-OUTPUT_FOLDER = BASE_FOLDER / "TempPlazza_Output"
+SUMMARY_FILE = BASE_FOLDER / "TempPlazza_Summary.xlsx"
 
 
-OUTPUT_FOLDER.mkdir(
+
+MAIN_OUTPUT = BASE_FOLDER / "Main_Report"
+
+
+MAIN_OUTPUT.mkdir(
     exist_ok=True
 )
+
 
 
 
@@ -361,15 +592,231 @@ if "level" not in st.session_state:
 
 
 
-if "page_number" not in st.session_state:
+if "main_row" not in st.session_state:
 
-    st.session_state.page_number = 1
+    st.session_state.main_row = 17
 
 
 
-if "excel_row" not in st.session_state:
+if "summary_row" not in st.session_state:
 
-    st.session_state.excel_row = 17
+    st.session_state.summary_row = 2
+
+
+
+if "main_page" not in st.session_state:
+
+    st.session_state.main_page = 1
+
+
+
+
+
+
+# =====================================================
+# CREATE TOWER WORKBOOK
+# =====================================================
+
+
+def get_tower_file():
+
+
+
+    file = (
+        MAIN_OUTPUT /
+        f"{st.session_state.tower}.xlsx"
+    )
+
+
+
+    if not file.exists():
+
+        MASTER_FILE = BASE_FOLDER / "TempPlazza.xlsx"
+
+
+def get_tower_file():
+
+    tower_file = (
+        MAIN_OUTPUT /
+        f"{st.session_state.tower}.xlsx"
+    )
+
+
+    if not tower_file.exists():
+
+        shutil.copy(
+            MASTER_FILE,
+            tower_file
+        )
+
+
+    return tower_file
+
+
+
+
+
+
+# =====================================================
+# OPEN MAIN WORKBOOK
+# =====================================================
+
+
+def open_main_excel():
+
+
+
+    file = get_tower_file()
+
+
+    return load_workbook(
+        file
+    )
+
+
+
+
+
+
+
+# =====================================================
+# CREATE LEVEL SHEET
+# =====================================================
+
+
+def get_level_sheet():
+
+
+
+    wb = open_main_excel()
+
+
+    level_name = st.session_state.level
+
+
+
+    if level_name not in wb.sheetnames:
+
+
+
+        source = wb.active
+
+
+        ws = wb.copy_worksheet(
+            source
+        )
+
+
+        ws.title = level_name
+
+
+
+
+    return wb, wb[level_name]
+
+
+
+
+
+
+
+# =====================================================
+# CREATE NEXT LEVEL PAGE
+# =====================================================
+
+
+def create_main_next_page():
+
+
+
+    wb = open_main_excel()
+
+
+
+    new_name = (
+
+        f"{st.session_state.level}"
+        f"_Page_{st.session_state.main_page}"
+
+    )
+
+
+
+    if new_name not in wb.sheetnames:
+
+
+
+        source = wb[
+            st.session_state.level
+        ]
+
+
+        ws = wb.copy_worksheet(
+            source
+        )
+
+
+        ws.title = new_name
+
+
+
+
+    wb.save(
+        get_tower_file()
+    )
+
+
+
+
+
+
+# =====================================================
+# SUMMARY WORKBOOK
+# =====================================================
+
+
+def create_summary_file():
+
+
+
+    if not SUMMARY_FILE.exists():
+
+
+
+        wb = load_workbook(
+            MASTER_FILE
+        )
+
+
+        ws = wb.active
+
+
+        ws.title = "Summary"
+
+
+
+        wb.save(
+            SUMMARY_FILE
+        )
+
+
+
+
+
+
+
+def open_summary():
+
+
+
+    create_summary_file()
+
+
+    return load_workbook(
+        SUMMARY_FILE
+    )
+
+
 
 
 
@@ -386,141 +833,40 @@ st.subheader(
 
 
 
-col1, col2 = st.columns(2)
+c1,c2 = st.columns(2)
 
 
 
-with col1:
+with c1:
 
 
     tower = st.text_input(
-        "Tower / Podium",
-        value=st.session_state.tower,
-        key="tower_input"
+        "Tower / Podium"
     )
 
 
 
-with col2:
+with c2:
 
 
     level = st.text_input(
-        "Level",
-        value=st.session_state.level,
-        key="level_input"
+        "Level"
     )
 
 
 
 
 
-# =====================================================
-# CREATE TOWER FILE
-# =====================================================
-
-
-def get_tower_file(tower_name):
-
-
-    tower_file = (
-        OUTPUT_FOLDER /
-        f"{tower_name}.xlsx"
-    )
-
-
-    if not tower_file.exists():
-
-
-        shutil.copy(
-            MASTER_FILE,
-            tower_file
-        )
-
-
-
-    return tower_file
-
-
-
-
-
 
 # =====================================================
-# OPEN EXCEL
-# =====================================================
-
-
-def open_excel():
-
-
-    tower_file = get_tower_file(
-        st.session_state.tower
-    )
-
-
-    wb = load_workbook(
-        tower_file
-    )
-
-
-    return wb
-
-
-
-
-
-
-# =====================================================
-# CREATE LEVEL SHEET
-# =====================================================
-
-
-def get_sheet():
-
-
-    wb = open_excel()
-
-
-    level_name = st.session_state.level
-
-
-
-    if level_name not in wb.sheetnames:
-
-
-        source = wb.active
-
-
-        new_sheet = wb.copy_worksheet(
-            source
-        )
-
-
-        new_sheet.title = level_name
-
-
-
-
-    ws = wb[level_name]
-
-
-
-    return wb, ws
-
-
-
-
-
-
-# =====================================================
-# LOCK TOWER AND LEVEL
+# LOCK TOWER LEVEL
 # =====================================================
 
 
 if st.button(
-    "🔒 Lock Tower & Level",
-    key="lock_tower_level"
+    "🔒 Lock Tower & Level"
 ):
+
 
 
     st.session_state.tower = tower
@@ -529,19 +875,18 @@ if st.button(
     st.session_state.level = level
 
 
-    st.session_state.page_number = 1
+
+    st.session_state.main_row = 17
 
 
-    st.session_state.excel_row = 17
-
-
-
-
-    wb, ws = get_sheet()
+    st.session_state.main_page = 1
 
 
 
-    # Excel Header Update
+
+    wb,ws = get_level_sheet()
+
+
 
     ws["G9"] = tower
 
@@ -551,21 +896,14 @@ if st.button(
 
 
 
-
-    tower_file = get_tower_file(
-        tower
-    )
-
-
-
     wb.save(
-        tower_file
+        get_tower_file()
     )
 
 
 
     st.success(
-        f"{tower}.xlsx created with sheet {level}"
+        "Tower and Level Locked"
     )
 
 
@@ -573,149 +911,43 @@ if st.button(
 
 
 
-
 # =====================================================
-# CREATE NEXT PAGE
-# =====================================================
-
-
-def create_new_page():
-
-
-    wb = open_excel()
-
-
-
-    base_sheet = st.session_state.level
-
-
-
-    page = st.session_state.page_number
-
-
-
-    new_sheet_name = (
-        f"{base_sheet}_Page_{page}"
-    )
-
-
-
-    if new_sheet_name not in wb.sheetnames:
-
-
-        source = wb[base_sheet]
-
-
-        new_sheet = wb.copy_worksheet(
-            source
-        )
-
-
-        new_sheet.title = new_sheet_name
-
-
-
-
-
-    tower_file = get_tower_file(
-        st.session_state.tower
-    )
-
-
-
-    wb.save(
-        tower_file
-    )
-
-
-
-
-
-
-
-# =====================================================
-# GET ACTIVE SHEET
-# =====================================================
-
-
-def get_active_sheet():
-
-
-    wb = open_excel()
-
-
-
-    if st.session_state.page_number == 1:
-
-
-        ws = wb[
-            st.session_state.level
-        ]
-
-
-
-    else:
-
-
-        sheet_name = (
-
-            f"{st.session_state.level}"
-            f"_Page_{st.session_state.page_number}"
-
-        )
-
-
-        ws = wb[sheet_name]
-
-
-
-    return wb, ws
-
-
-
-
-
-
-# =====================================================
-# EQUIPMENT INPUT FORM
+# EQUIPMENT ENTRY FORM
 # =====================================================
 
 
 st.subheader(
-    "Equipment Data"
+    "Equipment Test Entry"
 )
 
 
 
-col1, col2 = st.columns(2)
 
+col1,col2 = st.columns(2)
 
 
 
 with col1:
 
 
+
     equipment_tag = st.text_input(
-        "Equipment Tag",
-        key="equipment_tag"
+        "Equipment Tag"
     )
 
 
     room = st.text_input(
-        "Room",
-        key="room"
+        "Room"
     )
 
 
     set_point = st.text_input(
-        "Thermostat Set Point °C",
-        key="set_point"
+        "Set Point °C"
     )
 
 
     design = st.text_input(
-        "Design Temp / %RH",
-        key="design"
+        "Design Temp / RH"
     )
 
 
@@ -724,35 +956,31 @@ with col1:
 with col2:
 
 
+
     reading_time = st.text_input(
-        "Reading Time",
-        key="reading_time"
+        "Reading Time"
     )
 
 
     indoor_db = st.text_input(
-        "Indoor DB",
-        key="indoor_db"
+        "Indoor DB"
     )
 
 
     indoor_wb = st.text_input(
-        "Indoor WB",
-        key="indoor_wb"
+        "Indoor WB"
     )
 
 
     indoor_rh = st.text_input(
-        "Indoor RH %",
-        key="indoor_rh"
+        "Indoor RH %"
     )
 
 
 
 
-remarks = st.text_input(
-    "Remarks",
-    key="remarks"
+remarks = st.text_area(
+    "Remarks / Issue / Delay"
 )
 
 
@@ -762,106 +990,182 @@ remarks = st.text_input(
 
 
 # =====================================================
-# UPDATE EXCEL BUTTON
+# SAVE EQUIPMENT
 # =====================================================
 
+
 if st.button(
-    "💾 Update Equipment Data",
-    key="update_equipment"
+    "💾 Save Equipment"
 ):
 
-    wb, ws = get_active_sheet()
 
-    row = st.session_state.excel_row
+
+    if not st.session_state.tower:
+
+
+        st.error(
+            "Lock Tower and Level first"
+        )
+
+
+        st.stop()
+
+
+
+
+
+    # -----------------------------
+    # MAIN WORKBOOK
+    # -----------------------------
+
+
+    wb,ws = get_level_sheet()
+
+
+
+    row = st.session_state.main_row
+
 
 
     ws[f"A{row}"] = equipment_tag
+
     ws[f"R{row}"] = room
+
     ws[f"V{row}"] = set_point
+
     ws[f"AB{row}"] = design
+
     ws[f"AJ{row}"] = reading_time
+
     ws[f"AN{row}"] = indoor_db
+
     ws[f"AR{row}"] = indoor_wb
+
     ws[f"AV{row}"] = indoor_rh
+
     ws[f"AZ{row}"] = remarks
 
 
 
-    tower_file = get_tower_file(
-        st.session_state.tower
-    )
-
 
     wb.save(
-        tower_file
+        get_tower_file()
     )
 
 
-    st.info(
-        f"Saved File: {tower_file}"
+
+
+
+
+    # -----------------------------
+    # SUMMARY WORKBOOK
+    # -----------------------------
+
+
+
+    swb = open_summary()
+
+
+    sws = swb["Summary"]
+
+
+
+    srow = st.session_state.summary_row
+
+
+
+    sws[f"A{srow}"] = datetime.now().date()
+
+    sws[f"B{srow}"] = st.session_state.username
+
+    sws[f"C{srow}"] = st.session_state.tower
+
+    sws[f"D{srow}"] = st.session_state.level
+
+    sws[f"E{srow}"] = equipment_tag
+
+    sws[f"F{srow}"] = room
+
+    sws[f"G{srow}"] = set_point
+
+    sws[f"H{srow}"] = design
+
+    sws[f"I{srow}"] = reading_time
+
+    sws[f"J{srow}"] = indoor_db
+
+    sws[f"K{srow}"] = indoor_wb
+
+    sws[f"L{srow}"] = indoor_rh
+
+    sws[f"M{srow}"] = remarks
+
+
+
+    swb.save(
+        SUMMARY_FILE
     )
+
+
+
+
 
 
     st.success(
-        f"Equipment saved in Row {row}"
+        f"Saved Equipment Row {row}"
     )
 
 
-    st.session_state.excel_row += 1
+
+    st.session_state.main_row += 1
+
+
+    st.session_state.summary_row += 1
 
 
 
-    if st.session_state.excel_row > 33:
 
-        st.session_state.page_number += 1
 
-        st.session_state.excel_row = 17
+    # MAIN WORKBOOK PAGE LIMIT
 
-        create_new_page()
+    if st.session_state.main_row > 33:
+
+
+
+        st.session_state.main_page += 1
+
+
+        st.session_state.main_row = 17
+
+
+        create_main_next_page()
+
 
 
         st.info(
-            f"New page created: {st.session_state.page_number}"
+            "New Main Workbook Page Created"
+        )
+
+
+
+
+
+
+    # SUMMARY LIMIT 23
+
+
+    if st.session_state.summary_row > 24:
+
+
+        st.session_state.summary_row = 2
+
+
+        st.info(
+            "New Summary Sheet Required"
         )
 # =====================================================
-# READ EQUIPMENT FROM EXCEL
-# =====================================================
-
-def get_equipment_from_excel(tag):
-
-    wb, ws = get_active_sheet()
-
-
-    for row in range(17,34):
-
-        if ws[f"A{row}"].value == tag:
-
-            return {
-
-                "tag": ws[f"A{row}"].value,
-
-                "room": ws[f"R{row}"].value,
-
-                "set_point": ws[f"V{row}"].value,
-
-                "design": ws[f"AB{row}"].value,
-
-                "time": ws[f"AJ{row}"].value,
-
-                "db": ws[f"AN{row}"].value,
-
-                "wb": ws[f"AR{row}"].value,
-
-                "rh": ws[f"AV{row}"].value,
-
-                "remarks": ws[f"AZ{row}"].value
-
-            }
-
-
-    return None
-# =====================================================
-# PART 3 - PDF REPORT GENERATION MODULE
+# PART 3
+# DASHBOARD + SUMMARY PDF REPORT
 # =====================================================
 
 
@@ -869,16 +1173,254 @@ from fpdf import FPDF
 
 
 
+REPORT_FOLDER = BASE_FOLDER / "Reports"
+
+PDF_FOLDER = REPORT_FOLDER / "PDF"
+
+
+PDF_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+
+
+
 
 # =====================================================
-# PDF CREATION FUNCTION
+# DASHBOARD
 # =====================================================
 
 
-def create_pdf(data):
+st.divider()
 
 
-    pdf = FPDF()
+st.subheader(
+    "📊 TempPlazza Dashboard"
+)
+
+
+
+total_equipment = (
+    st.session_state.summary_row - 2
+)
+
+
+
+col1,col2,col3,col4 = st.columns(4)
+
+
+
+with col1:
+
+    st.metric(
+        "Total Tested",
+        total_equipment
+    )
+
+
+
+with col2:
+
+    st.metric(
+        "Current Tower",
+        st.session_state.get(
+            "tower",
+            "-"
+        )
+    )
+
+
+
+with col3:
+
+    st.metric(
+        "Current Level",
+        st.session_state.get(
+            "level",
+            "-"
+        )
+    )
+
+
+
+with col4:
+
+    progress = min(
+        total_equipment / 23,
+        1.0
+    )
+
+
+    st.metric(
+        "Summary Progress",
+        f"{int(progress*100)}%"
+    )
+
+
+
+st.progress(
+    progress
+)
+
+
+
+
+
+
+
+
+# =====================================================
+# ADMIN PREPARED NAME
+# =====================================================
+
+
+if "prepared_name" not in st.session_state:
+
+
+    st.session_state.prepared_name = ""
+
+
+
+
+
+if (
+    st.session_state.username == ADMIN_USER
+):
+
+
+    with st.expander(
+        "Admin PDF Name Setting"
+    ):
+
+
+
+        st.session_state.prepared_name = st.text_input(
+
+            "Enter Prepared By Name for PDF"
+
+        )
+
+
+
+
+
+
+def get_pdf_name():
+
+
+
+    if (
+        st.session_state.username == ADMIN_USER
+        and
+        st.session_state.prepared_name
+    ):
+
+
+        return st.session_state.prepared_name
+
+
+
+    else:
+
+
+        return "Authorized User"
+
+
+
+
+
+
+
+
+
+# =====================================================
+# PDF CLASS
+# =====================================================
+
+
+class SummaryPDF(FPDF):
+
+
+    def header(self):
+
+
+        self.set_font(
+            "Arial",
+            "B",
+            16
+        )
+
+
+        self.cell(
+            0,
+            10,
+            "AJB - TAB",
+            ln=True,
+            align="C"
+        )
+
+
+        self.set_font(
+            "Arial",
+            "",
+            12
+        )
+
+
+        self.cell(
+            0,
+            8,
+            "Temperature Test Summary Report",
+            ln=True,
+            align="C"
+        )
+
+
+        self.ln(5)
+
+
+
+
+
+    def footer(self):
+
+
+        self.set_y(-15)
+
+
+        self.set_font(
+            "Arial",
+            "I",
+            8
+        )
+
+
+        self.cell(
+            0,
+            10,
+            "Generated by TempPlazza",
+            align="C"
+        )
+
+
+
+
+
+
+
+
+
+# =====================================================
+# CREATE SUMMARY PDF
+# =====================================================
+
+
+def create_summary_pdf():
+
+
+
+    pdf = SummaryPDF()
 
 
 
@@ -886,357 +1428,213 @@ def create_pdf(data):
 
 
 
-    # -------------------------
-    # HEADER
-    # -------------------------
-
-
-    pdf.set_fill_color(
-        30,
-        90,
-        150
+    pdf.set_font(
+        "Arial",
+        size=11
     )
+
+
+
+    pdf.cell(
+        0,
+        8,
+        f"Project Tower : {st.session_state.tower}",
+        ln=True
+    )
+
+
+    pdf.cell(
+        0,
+        8,
+        f"Level : {st.session_state.level}",
+        ln=True
+    )
+
+
+    pdf.cell(
+        0,
+        8,
+        f"Date : {datetime.now().strftime('%Y-%m-%d')}",
+        ln=True
+    )
+
+
+    pdf.cell(
+        0,
+        8,
+        f"Prepared By : {get_pdf_name()}",
+        ln=True
+    )
+
+
+
+    pdf.ln(5)
+
+
+
+
+
+    pdf.set_font(
+        "Arial",
+        "B",
+        10
+    )
+
+
+    headers = [
+
+        "Tag",
+        "Room",
+        "SP",
+        "DB",
+        "WB",
+        "RH"
+
+    ]
+
+
+
+    widths = [
+
+        35,
+        25,
+        20,
+        20,
+        20,
+        20
+
+    ]
+
+
+
+    for h,w in zip(headers,widths):
+
+        pdf.cell(
+            w,
+            8,
+            h,
+            border=1
+        )
+
+
+    pdf.ln()
+
+
+
+    pdf.set_font(
+        "Arial",
+        size=9
+    )
+
+
+
+
+
+    wb = load_workbook(
+        SUMMARY_FILE
+    )
+
+
+    ws = wb["Summary"]
+
+
+
+
+
+    for row in range(
+        2,
+        ws.max_row+1
+    ):
+
+
+
+        pdf.cell(
+            35,
+            8,
+            str(ws[f"E{row}"].value),
+            border=1
+        )
+
+
+        pdf.cell(
+            25,
+            8,
+            str(ws[f"F{row}"].value),
+            border=1
+        )
+
+
+        pdf.cell(
+            20,
+            8,
+            str(ws[f"G{row}"].value),
+            border=1
+        )
+
+
+        pdf.cell(
+            20,
+            8,
+            str(ws[f"J{row}"].value),
+            border=1
+        )
+
+
+        pdf.cell(
+            20,
+            8,
+            str(ws[f"K{row}"].value),
+            border=1
+        )
+
+
+        pdf.cell(
+            20,
+            8,
+            str(ws[f"L{row}"].value),
+            border=1
+        )
+
+
+
+        pdf.ln()
+
+
+
+
+
+
+    pdf.ln(10)
+
+
+
+    pdf.set_font(
+        "Arial",
+        "B",
+        11
+    )
+
+
+
+    pdf.cell(
+        0,
+        8,
+        "Issue / Delay / Remarks",
+        ln=True
+    )
+
 
 
     pdf.rect(
-        0,
-        0,
-        210,
-        35,
-        "F"
-    )
-
-
-
-    pdf.set_text_color(
-        255,
-        255,
-        255
-    )
-
-
-
-    pdf.set_font(
-        "Arial",
-        "B",
-        18
-    )
-
-
-
-    pdf.cell(
-        0,
         10,
-        "AJB - TAB",
-        ln=True,
-        align="C"
+        pdf.get_y(),
+        190,
+        35
     )
 
 
 
-    pdf.set_font(
-        "Arial",
-        "B",
-        12
-    )
-
-
-
-    pdf.cell(
-        0,
-        8,
-        "Temperature Test Daily Report",
-        ln=True,
-        align="C"
-    )
-
-
-
-    pdf.set_text_color(
-        0,
-        0,
-        0
-    )
-
-
-
-    pdf.ln(15)
-
-
-
-
-    # -------------------------
-    # PROJECT INFORMATION
-    # -------------------------
-
-
-    pdf.set_font(
-        "Arial",
-        "B",
-        12
-    )
-
-
-    pdf.cell(
-        0,
-        8,
-        "Project Information",
-        ln=True
-    )
-
-
-
-    pdf.set_font(
-        "Arial",
-        size=11
-    )
-
-
-
-    info = [
-
-        (
-            "Prepared By",
-            st.session_state.username
-        ),
-
-
-        (
-            "Date",
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M"
-            )
-        ),
-
-
-        (
-            "Tower",
-            st.session_state.tower
-        ),
-
-
-        (
-            "Level",
-            st.session_state.level
-        ),
-
-
-        (
-            "Page",
-            str(st.session_state.page_number)
-        )
-
-    ]
-
-
-
-
-    for label, value in info:
-
-
-        pdf.cell(
-            50,
-            8,
-            label,
-            border=1
-        )
-
-
-        pdf.cell(
-            140,
-            8,
-            str(value),
-            border=1
-        )
-
-
-        pdf.ln()
-
-
-
-
-    pdf.ln(8)
-
-
-
-
-    # -------------------------
-    # EQUIPMENT DETAILS
-    # -------------------------
-
-
-    pdf.set_font(
-        "Arial",
-        "B",
-        12
-    )
-
-
-    pdf.cell(
-        0,
-        8,
-        "Equipment Details",
-        ln=True
-    )
-
-
-
-    pdf.set_font(
-        "Arial",
-        size=11
-    )
-
-
-
-    equipment = [
-
-
-        (
-            "Equipment Tag",
-            data["tag"]
-        ),
-
-
-        (
-            "Room",
-            data["room"]
-        ),
-
-
-        (
-            "Set Point",
-            data["set_point"]
-        ),
-
-
-        (
-            "Design",
-            data["design"]
-        ),
-
-
-        (
-            "Reading Time",
-            data["time"]
-        ),
-
-
-        (
-            "Indoor DB",
-            data["db"]
-        ),
-
-
-        (
-            "Indoor WB",
-            data["wb"]
-        ),
-
-
-        (
-            "Indoor RH",
-            data["rh"]
-        )
-
-    ]
-
-
-
-
-    for label, value in equipment:
-
-
-        pdf.cell(
-            55,
-            8,
-            label,
-            border=1
-        )
-
-
-        pdf.cell(
-            135,
-            8,
-            str(value),
-            border=1
-        )
-
-
-        pdf.ln()
-
-
-
-
-
-    pdf.ln(8)
-
-
-
-
-    # -------------------------
-    # REMARKS
-    # -------------------------
-
-
-    pdf.set_font(
-        "Arial",
-        "B",
-        12
-    )
-
-
-    pdf.cell(
-        0,
-        8,
-        "Remarks",
-        ln=True
-    )
-
-
-
-    pdf.set_font(
-        "Arial",
-        size=11
-    )
-
-
-
-    pdf.multi_cell(
-        0,
-        8,
-        data["remarks"],
-        border=1
-    )
-
-
-
-
-
-    # -------------------------
-    # FOOTER
-    # -------------------------
-
-
-    pdf.set_y(
-        -20
-    )
-
-
-
-    pdf.set_font(
-        "Arial",
-        "I",
-        9
-    )
-
-
-
-    pdf.cell(
-        0,
-        10,
-        "Generated by AJB - TAB Temperature Data Logger",
-        align="C"
-    )
+    pdf.ln(40)
 
 
 
@@ -1249,130 +1647,497 @@ def create_pdf(data):
 
 
 # =====================================================
-# PDF REPORT SECTION
+# PDF BUTTON
 # =====================================================
 
+
+st.divider()
+
+
 st.subheader(
-    "PDF Report"
+    "📄 Reports"
 )
 
 
-pdf_tag = st.text_input(
-    "PDF Equipment Tag",
-    key="pdf_tag"
+
+
+issue_text = st.text_area(
+    "Add Issue / Delay Details for Report"
 )
+
 
 
 if st.button(
-    "📄 Generate PDF",
-    key="generate_pdf"
+    "Generate Summary PDF"
 ):
 
-    data = {
 
-        "tag": st.session_state.get("pdf_tag",""),
-
-        "room": st.session_state.get("room",""),
-
-        "set_point": st.session_state.get("set_point",""),
-
-        "design": st.session_state.get("design",""),
-
-        "time": st.session_state.get("reading_time",""),
-
-        "db": st.session_state.get("indoor_db",""),
-
-        "wb": st.session_state.get("indoor_wb",""),
-
-        "rh": st.session_state.get("indoor_rh",""),
-
-        "remarks": st.session_state.get("remarks","")
-
-    }
+    pdf = create_summary_pdf()
 
 
-    if data["tag"] == "":
 
-        st.error(
-            "Please enter Equipment Tag"
-        )
+    filename = (
 
-    else:
+        f"TempPlazza_Report_"
+        f"{datetime.now().strftime('%Y%m%d')}.pdf"
 
-        pdf = create_pdf(data)
+    )
 
 
-        pdf_bytes = pdf.output(
-            dest="S"
-        ).encode(
-            "latin-1"
-        )
+
+    path = PDF_FOLDER / filename
+
+
+
+    pdf.output(
+        path
+    )
+
+
+
+    with open(
+        path,
+        "rb"
+    ) as file:
+
 
 
         st.download_button(
 
-            label="⬇️ Download AJB-TAB PDF",
+            "⬇️ Download PDF",
 
-            data=pdf_bytes,
+            data=file,
 
-            file_name=f"AJB_TAB_{data['tag']}.pdf",
+            file_name=filename,
 
-            mime="application/pdf",
-
-            key="pdf_download"
+            mime="application/pdf"
 
         )
 
-
-        st.success(
-            "PDF Generated Successfully"
-        )
-
-    st.stop()
-
-    pdf = create_pdf(data)
-
-
-    pdf_bytes = bytes(
-    pdf.output(
-        dest="S"
-    )
-    )
-
-
-    st.download_button(
-        label="⬇️ Download AJB-TAB PDF",
-
-        data=pdf_bytes,
-
-        file_name=f"AJB_TAB_{pdf_tag}.pdf",
-
-        mime="application/pdf",
-
-        key="pdf_download"
-    )
 
 
     st.success(
-        "PDF Generated Successfully"
+        "Summary PDF Generated Successfully"
     )# =====================================================
-# DOWNLOAD EXCEL FILE
+# PART 4
+# FINAL SIDEBAR MENU
 # =====================================================
 
-st.subheader("Download Updated Excel")
 
-if st.session_state.tower:
+import io
 
-    excel_file = get_tower_file(
-        st.session_state.tower
+
+
+# =====================================================
+# CREATE EXCEL DOWNLOAD MEMORY
+# =====================================================
+
+
+def get_excel_download():
+
+
+
+    if not st.session_state.get(
+        "tower"
+    ):
+
+        return None
+
+
+
+    file = get_tower_file()
+
+
+
+    if file.exists():
+
+
+        with open(
+            file,
+            "rb"
+        ) as f:
+
+
+            return f.read()
+
+
+
+    return None
+
+
+
+
+
+
+# =====================================================
+# SIDEBAR MENU
+# =====================================================
+
+
+with st.sidebar:
+
+
+
+    st.title(
+        "☰ TempPlazza Menu"
     )
 
-    with open(excel_file, "rb") as f:
+
+
+    st.divider()
+
+
+
+    st.write(
+        "👤 Logged User"
+    )
+
+
+
+    st.info(
+        st.session_state.username
+    )
+
+
+
+    st.divider()
+
+
+
+
+
+
+    # ==========================
+    # DOWNLOAD EXCEL
+    # ==========================
+
+
+    st.subheader(
+        "📂 Files"
+    )
+
+
+
+    excel_data = get_excel_download()
+
+
+
+    if excel_data:
+
+
 
         st.download_button(
-            label="⬇️ Download Updated Excel",
-            data=f,
+
+            label="⬇️ Download Main Excel",
+
+            data=excel_data,
+
             file_name=f"{st.session_state.tower}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="download_excel"
+
+            mime=
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+            key="side_excel_download"
+
         )
+
+
+    else:
+
+
+        st.warning(
+            "Save equipment first"
+        )
+
+
+
+
+
+
+
+    # ==========================
+    # SUMMARY PDF
+    # ==========================
+
+
+
+    if st.button(
+        "📄 Generate Summary PDF",
+        key="side_pdf"
+    ):
+
+
+        st.session_state.generate_report = True
+
+
+
+        st.success(
+            "Go to Reports section"
+        )
+
+
+
+
+
+
+
+    st.divider()
+
+
+
+
+
+
+
+    # ==========================
+    # ADMIN ONLY
+    # ==========================
+
+
+    if (
+
+        st.session_state.username
+        ==
+        ADMIN_USER
+
+    ):
+
+
+
+        with st.expander(
+            "🔐 Admin Panel"
+        ):
+
+
+
+            st.subheader(
+                "User Management"
+            )
+
+
+
+
+
+            # ADD USER
+
+
+            new_user = st.text_input(
+
+                "Create Username",
+
+                key="admin_new_user"
+
+            )
+
+
+
+            new_password = st.text_input(
+
+                "Create Password",
+
+                type="password",
+
+                key="admin_new_password"
+
+            )
+
+
+
+
+
+            if st.button(
+
+                "➕ Add User",
+
+                key="admin_add"
+
+            ):
+
+
+
+                if new_user and new_password:
+
+
+
+                    st.session_state.users[new_user] = new_password
+
+
+
+                    st.success(
+                        "User Created"
+                    )
+
+
+
+                else:
+
+
+                    st.error(
+                        "Enter username and password"
+                    )
+
+
+
+
+
+
+
+            # REMOVE USER
+
+
+
+            remove_user = st.text_input(
+
+                "Remove User",
+
+                key="admin_remove"
+
+            )
+
+
+
+
+            if st.button(
+
+                "❌ Remove User",
+
+                key="admin_remove_button"
+
+            ):
+
+
+
+                if (
+
+                    remove_user in st.session_state.users
+
+                    and
+
+                    remove_user != ADMIN_USER
+
+                ):
+
+
+
+                    del st.session_state.users[remove_user]
+
+
+
+                    st.success(
+                        "User Removed"
+                    )
+
+
+                else:
+
+
+                    st.error(
+                        "Cannot remove admin"
+                    )
+
+
+
+
+
+
+
+            # CHANGE PASSWORD
+
+
+
+            change_user = st.text_input(
+
+                "Change Password User",
+
+                key="admin_change_user"
+
+            )
+
+
+
+            change_password = st.text_input(
+
+                "New Password",
+
+                type="password",
+
+                key="admin_change_password"
+
+            )
+
+
+
+
+
+            if st.button(
+
+                "🔑 Update Password",
+
+                key="admin_password"
+
+            ):
+
+
+
+                if change_user in st.session_state.users:
+
+
+
+                    st.session_state.users[
+                        change_user
+                    ] = change_password
+
+
+
+                    st.success(
+                        "Password Updated"
+                    )
+
+
+                else:
+
+
+                    st.error(
+                        "User not found"
+                    )
+
+
+
+
+
+
+
+    st.divider()
+
+
+
+
+
+
+    # ==========================
+    # LOGOUT
+    # ==========================
+
+
+    if st.button(
+
+        "🚪 Logout",
+
+        key="final_logout"
+
+    ):
+
+
+
+        st.session_state.logged_in = False
+
+
+        st.session_state.username = ""
+
+
+
+        save_state()
+
+
+
+        st.rerun()
