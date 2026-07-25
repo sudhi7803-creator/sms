@@ -653,19 +653,18 @@ def create_summary_file():
 
 
 
-def open_summary():
+swb = open_summary()
 
 
+if "Summary" not in swb.sheetnames:
 
-    create_summary_file()
-
-
-    return load_workbook(
-        SUMMARY_FILE
+    sws = swb.create_sheet(
+        "Summary"
     )
 
+else:
 
-
+    sws = swb["Summary"]
 
 
 
@@ -905,7 +904,7 @@ if st.button(
 
 
 
-   # -----------------------------
+# -----------------------------
 # SUMMARY WORKBOOK
 # -----------------------------
 
@@ -918,12 +917,23 @@ swb = open_summary()
 if "Summary" not in swb.sheetnames:
 
     sws = swb.create_sheet(
-        "Summary"
+        title="Summary"
     )
 
 else:
 
     sws = swb["Summary"]
+
+
+# Verify worksheet object
+
+if sws is None:
+
+    st.error(
+        "Summary worksheet not available"
+    )
+
+    st.stop()
 
 
 
