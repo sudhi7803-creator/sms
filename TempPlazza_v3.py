@@ -937,17 +937,28 @@ if st.button(
 swb = open_summary()
 
 
-# Check Summary sheet exists
+# Always get a real worksheet
 
-if "Summary" not in swb.sheetnames:
+if "Summary" in swb.sheetnames:
 
-    sws = swb.create_sheet(
-        title="Summary"
-    )
+    sws = swb["Summary"]
 
 else:
 
-    sws = swb["Summary"]
+    sws = swb.create_sheet(
+        "Summary"
+    )
+
+
+# Check worksheet type
+
+if not hasattr(sws, "cell"):
+
+    st.error(
+        "Summary sheet is not a valid Excel worksheet"
+    )
+
+    st.stop()
 
 
 # Verify worksheet object
