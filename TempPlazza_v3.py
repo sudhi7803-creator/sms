@@ -1606,6 +1606,13 @@ REPORT_FOLDER.mkdir(
 
 CREATOR_NAME = "Sudhin@2026"
 # =====================================================
+# REMOVE OLD DAILY REPORT SESSION VARIABLE
+# =====================================================
+
+if "daily_report" in st.session_state:
+
+    del st.session_state["daily_report"]
+# =====================================================
 # UNIQUE REPORT NAME
 # =====================================================
 
@@ -1657,7 +1664,7 @@ def get_report_name():
 
 
     return file
-    # =====================================================
+# =====================================================
 # CREATE DAILY REPORT
 # =====================================================
 
@@ -1876,7 +1883,7 @@ if st.button(
 
     "📄 Create Daily Report",
 
-    key="daily_report"
+    key="create_daily_report_button"
 
 ):
 
@@ -1884,7 +1891,7 @@ if st.button(
     report_file = create_daily_report()
 
 
-    st.session_state.daily_report = str(report_file)
+    st.session_state["daily_report_file"] = str(report_file)
 
 
     st.success(
@@ -1897,12 +1904,12 @@ if st.button(
 
 
 
-if "daily_report" in st.session_state:
+if "daily_report_file" in st.session_state:
 
 
     report_path = Path(
 
-        st.session_state.daily_report
+        st.session_state["daily_report_file"]
 
     )
 
@@ -1916,17 +1923,19 @@ if "daily_report" in st.session_state:
 
             "rb"
 
-        ) as file:
+        ) as f:
 
 
             st.download_button(
 
                 label="⬇️ Download Editable Excel Report",
 
-                data=file,
+                data=f,
 
                 file_name=report_path.name,
 
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+                key="download_daily_report"
 
             )
