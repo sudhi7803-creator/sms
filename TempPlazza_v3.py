@@ -4,12 +4,9 @@
 # LOGIN + ADMIN + BASIC SETTINGS
 # =====================================================
 
-
 import streamlit as st
 from pathlib import Path
 import json
-
-
 from datetime import datetime
 
 
@@ -23,9 +20,16 @@ COMPANY_NAME = "AJB - TAB"
 
 CREATOR_NAME = "Sudhin@2026"
 
+
+
 # =====================================================
-# REPORT USER CONTROL
+# SESSION STATE INITIALIZATION
 # =====================================================
+
+
+if "username" not in st.session_state:
+
+    st.session_state.username = ""
 
 
 if "report_user" not in st.session_state:
@@ -33,12 +37,31 @@ if "report_user" not in st.session_state:
     st.session_state.report_user = ""
 
 
+if "logged_in" not in st.session_state:
 
-login_user = st.session_state.username.lower()
+    st.session_state.logged_in = False
 
 
 
-# ADMIN CAN CREATE FOR OTHER USERS
+# =====================================================
+# REPORT USER CONTROL
+# =====================================================
+
+
+login_user = st.session_state.get(
+
+    "username",
+
+    ""
+
+).lower()
+
+
+
+# =====================================================
+# ADMIN CAN CREATE REPORT FOR OTHER USERS
+# =====================================================
+
 
 if login_user == "admin":
 
@@ -59,9 +82,12 @@ if login_user == "admin":
 
 
 
-# OTHER USERS USE THEIR OWN NAME
+# =====================================================
+# NORMAL USER REPORT
+# =====================================================
 
-else:
+
+elif login_user:
 
 
     st.session_state.report_user = (
@@ -71,6 +97,13 @@ else:
     )
 
 
+else:
+
+
+    st.session_state.report_user = ""
+
+
+
 # =====================================================
 # PAGE SETTINGS
 # =====================================================
@@ -78,7 +111,7 @@ else:
 
 st.set_page_config(
 
-    page_title="TempPlazza",
+    page_title="AJB - TAB",
 
     page_icon="🌡️",
 
@@ -1720,209 +1753,210 @@ def get_report_name():
 def create_daily_report():
 
 
-
     report_file = get_report_name()
-
 
 
     wb_new = Workbook()
 
 
-
     ws_new = wb_new.active
 
 
-
     ws_new.title = "Daily Report"
-# =====================================================
-# REPORT SHEET HEADER FORMAT
-# =====================================================
+    # =====================================================
+    # REPORT SHEET HEADER FORMAT
+    # =====================================================
 
 
-ws_new.merge_cells(
-    "A1:M1"
-)
+    ws_new.merge_cells(
+        "A1:M1"
+    )
 
 
-ws_new["A1"] = "TEMPPLAZZA DAILY REPORT"
+    ws_new["A1"] = "TEMPPLAZZA DAILY REPORT"
 
 
-ws_new["A1"].font = Font(
-    bold=True,
-    size=16
-)
+    ws_new["A1"].font = Font(
+        bold=True,
+        size=16
+    )
 
 
-ws_new["A1"].alignment = Alignment(
-    horizontal="center"
-)
-
-
-
-ws_new["A2"] = (
-    "Report User: "
-    + st.session_state.report_user
-)
+    ws_new["A1"].alignment = Alignment(
+        horizontal="center"
+    )
 
 
 
-ws_new["A3"] = (
-    "Report Date: "
-    + str(datetime.now().date())
-)
+    ws_new["A2"] = (
+        "Report User: "
+        + st.session_state.report_user
+    )
+
+
+    ws_new["A3"] = (
+        "Report Date: "
+        + str(datetime.now().date())
+    )
 
 
 
-# =====================================================
-# TABLE HEADER
-# =====================================================
+    # =====================================================
+    # TABLE HEADER
+    # =====================================================
 
 
-ws_new.append(
+    ws_new.append(
 
-    [
+        [
 
-    "No",
+        "No",
 
-    "Date",
+        "Date",
 
-    "User",
+        "User",
 
-    "Tower",
+        "Tower",
 
-    "Level",
+        "Level",
 
-    "Equipment",
+        "Equipment",
 
-    "Room",
+        "Room",
 
-    "Set Point",
+        "Set Point",
 
-    "Reading Time",
+        "Reading Time",
 
-    "Indoor DB",
+        "Indoor DB",
 
-    "Indoor WB",
+        "Indoor WB",
 
-    "Indoor RH",
+        "Indoor RH",
 
-    "Remarks"
+        "Remarks"
 
-    ]
-
-)
-
-
-
-# SERIAL NUMBER START
-
-serial_no = 1
-
-
-
-# =====================================================
-# READ ALL TOWER FILES
-# =====================================================
-
-
-for tower_file in MAIN_OUTPUT.glob("*.xlsx"):
-
-
-    wb = load_workbook(
-
-        tower_file,
-
-        data_only=True
+        ]
 
     )
 
 
 
-    for sheet in wb.sheetnames:
+    # =====================================================
+    # SERIAL NUMBER START
+    # =====================================================
 
 
-        if sheet.lower() in [
-
-            "sheet1",
-
-            "template",
-
-            "master"
-
-        ]:
-
-            continue
+    serial_no = 1
 
 
 
-        ws = wb[sheet]
+    # =====================================================
+    # READ ALL TOWER FILES
+    # =====================================================
 
 
-
-        for r in range(
-
-            17,
-
-            34
-
-        ):
+    for tower_file in MAIN_OUTPUT.glob("*.xlsx"):
 
 
-            equipment = ws[f"A{r}"].value
+        wb = load_workbook(
 
+            tower_file,
 
-
-            if equipment:
-
-
-                ws_new.append(
-
-                    [
-
-                    serial_no,
-
-                    ws["AG35"].value,
-
-                    st.session_state.report_user,
-
-                    ws["G7"].value,
-
-                    sheet,
-
-                    equipment,
-
-                    ws[f"R{r}"].value,
-
-                    ws[f"V{r}"].value,
-
-                    ws[f"AJ{r}"].value,
-
-                    ws[f"AN{r}"].value,
-
-                    ws[f"AR{r}"].value,
-
-                    ws[f"AV{r}"].value,
-
-                    ws[f"AZ{r}"].value
-
-                    ]
-
-                )
-
-
-                serial_no += 1
-
-
-
-        wb_new.save(
-
-            report_file
+            data_only=True
 
         )
 
 
-        return report_file
-    
+        for sheet in wb.sheetnames:
+
+
+            if sheet.lower() in [
+
+                "sheet1",
+
+                "template",
+
+                "master"
+
+            ]:
+
+                continue
+
+
+
+            ws = wb[sheet]
+
+
+
+            for r in range(
+
+                17,
+
+                34
+
+            ):
+
+
+                equipment = ws[f"A{r}"].value
+
+
+
+                if equipment:
+
+
+                    ws_new.append(
+
+                        [
+
+                        serial_no,
+
+                        ws["AG35"].value,
+
+                        st.session_state.report_user,
+
+                        ws["G7"].value,
+
+                        sheet,
+
+                        equipment,
+
+                        ws[f"R{r}"].value,
+
+                        ws[f"V{r}"].value,
+
+                        ws[f"AJ{r}"].value,
+
+                        ws[f"AN{r}"].value,
+
+                        ws[f"AR{r}"].value,
+
+                        ws[f"AV{r}"].value,
+
+                        ws[f"AZ{r}"].value
+
+                        ]
+
+                    )
+
+
+                    serial_no += 1
+
+
+
+    # =====================================================
+    # SAVE REPORT
+    # =====================================================
+
+
+    wb_new.save(
+
+        report_file
+
+    )
+
+
+    return report_file
 # =====================================================
 # DAILY REPORT BUTTON
 # =====================================================
