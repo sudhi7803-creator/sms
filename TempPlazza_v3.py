@@ -1914,15 +1914,14 @@ for tower_file in MAIN_OUTPUT.glob("*.xlsx"):
 
 
 
-wb_new.save(
+        wb_new.save(
 
-    report_file
+            report_file
 
-)
+        )
 
 
-
-    return report_file
+        return report_file
     
 # =====================================================
 # DAILY REPORT BUTTON
