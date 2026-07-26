@@ -23,6 +23,52 @@ COMPANY_NAME = "AJB - TAB"
 
 CREATOR_NAME = "Sudhin@2026"
 
+# =====================================================
+# REPORT USER CONTROL
+# =====================================================
+
+
+if "report_user" not in st.session_state:
+
+    st.session_state.report_user = ""
+
+
+
+login_user = st.session_state.username.lower()
+
+
+
+# ADMIN CAN CREATE FOR OTHER USERS
+
+if login_user == "admin":
+
+
+    report_user = st.text_input(
+
+        "Daily Report User Name",
+
+        key="report_user_input"
+
+    )
+
+
+    if report_user:
+
+
+        st.session_state.report_user = report_user
+
+
+
+# OTHER USERS USE THEIR OWN NAME
+
+else:
+
+
+    st.session_state.report_user = (
+
+        st.session_state.username
+
+    )
 
 
 # =====================================================
@@ -1578,7 +1624,7 @@ if st.button(
             f"{st.session_state.level} Locked"
 
         )
-        # =====================================================
+# =====================================================
 # PART 3A
 # DAILY REPORT SYSTEM
 # =====================================================
@@ -1588,6 +1634,8 @@ from openpyxl import Workbook, load_workbook
 from pathlib import Path
 import shutil
 
+from openpyxl.styles import Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
 
 
 # =====================================================
@@ -1625,7 +1673,7 @@ def get_report_name():
     )
 
 
-    username = st.session_state.username
+    username = st.session_state.report_user
 
 
 
@@ -1686,180 +1734,191 @@ def create_daily_report():
 
 
     ws_new.title = "Daily Report"
+# =====================================================
+# REPORT SHEET HEADER FORMAT
+# =====================================================
+
+
+ws_new.merge_cells(
+    "A1:M1"
+)
+
+
+ws_new["A1"] = "TEMPPLAZZA DAILY REPORT"
+
+
+ws_new["A1"].font = Font(
+    bold=True,
+    size=16
+)
+
+
+ws_new["A1"].alignment = Alignment(
+    horizontal="center"
+)
 
 
 
+ws_new["A2"] = (
+    "Report User: "
+    + st.session_state.report_user
+)
 
 
-    # HEADER
+
+ws_new["A3"] = (
+    "Report Date: "
+    + str(datetime.now().date())
+)
 
 
-    ws_new["A1"] = "TempPlazza Daily Report"
 
-    ws_new["A2"] = (
+# =====================================================
+# TABLE HEADER
+# =====================================================
 
-        "Created by: "
 
-        + CREATOR_NAME
+ws_new.append(
+
+    [
+
+    "No",
+
+    "Date",
+
+    "User",
+
+    "Tower",
+
+    "Level",
+
+    "Equipment",
+
+    "Room",
+
+    "Set Point",
+
+    "Reading Time",
+
+    "Indoor DB",
+
+    "Indoor WB",
+
+    "Indoor RH",
+
+    "Remarks"
+
+    ]
+
+)
+
+
+
+# SERIAL NUMBER START
+
+serial_no = 1
+
+
+
+# =====================================================
+# READ ALL TOWER FILES
+# =====================================================
+
+
+for tower_file in MAIN_OUTPUT.glob("*.xlsx"):
+
+
+    wb = load_workbook(
+
+        tower_file,
+
+        data_only=True
 
     )
 
 
-    ws_new["A3"] = (
 
-        "User: "
+    for sheet in wb.sheetnames:
 
-        + st.session_state.username
 
-    )
+        if sheet.lower() in [
 
+            "sheet1",
 
-    ws_new["A4"] = datetime.now().date()
+            "template",
 
+            "master"
 
+        ]:
 
+            continue
 
 
 
-    row = 6
+        ws = wb[sheet]
 
 
 
-    ws_new.append(
+        for r in range(
 
-        [
+            17,
 
-        "Date",
+            34
 
-        "User",
+        ):
 
-        "Tower",
 
-        "Level",
+            equipment = ws[f"A{r}"].value
 
-        "Equipment",
 
-        "Room",
 
-        "Set Point",
+            if equipment:
 
-        "Reading Time",
 
-        "Indoor DB",
+                ws_new.append(
 
-        "Indoor WB",
+                    [
 
-        "Indoor RH",
+                    serial_no,
 
-        "Remarks"
+                    ws["AG35"].value,
 
-        ]
+                    st.session_state.report_user,
 
-    )
+                    ws["G7"].value,
 
+                    sheet,
 
+                    equipment,
 
+                    ws[f"R{r}"].value,
 
+                    ws[f"V{r}"].value,
 
-    # READ ALL TOWER FILES
+                    ws[f"AJ{r}"].value,
 
+                    ws[f"AN{r}"].value,
 
-    for tower_file in MAIN_OUTPUT.glob("*.xlsx"):
+                    ws[f"AR{r}"].value,
 
+                    ws[f"AV{r}"].value,
 
+                    ws[f"AZ{r}"].value
 
-        wb = load_workbook(
+                    ]
 
-            tower_file,
+                )
 
-            data_only=True
 
-        )
+                serial_no += 1
 
 
 
-        for sheet in wb.sheetnames:
+wb_new.save(
 
+    report_file
 
-
-            if sheet.lower() in [
-
-                "sheet1",
-
-                "template",
-
-                "master"
-
-            ]:
-
-                continue
-
-
-
-
-            ws = wb[sheet]
-
-
-
-            for r in range(
-
-                17,
-
-                34
-
-            ):
-
-
-
-                equipment = ws[f"A{r}"].value
-
-
-
-                if equipment:
-
-
-
-                    ws_new.append(
-
-                        [
-
-                        ws["AG35"].value,
-
-                        st.session_state.username,
-
-                        ws["G7"].value,
-
-                        sheet,
-
-                        equipment,
-
-                        ws[f"R{r}"].value,
-
-                        ws[f"V{r}"].value,
-
-                        ws[f"AJ{r}"].value,
-
-                        ws[f"AN{r}"].value,
-
-                        ws[f"AR{r}"].value,
-
-                        ws[f"AV{r}"].value,
-
-                        ws[f"AZ{r}"].value
-
-                        ]
-
-                    )
-
-
-
-
-
-    wb_new.save(
-
-        report_file
-
-    )
+)
 
 
 
