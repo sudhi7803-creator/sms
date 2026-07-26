@@ -1857,7 +1857,8 @@ def create_daily_report():
 
 
     return report_file
-    # =====================================================
+    
+# =====================================================
 # DAILY REPORT BUTTON
 # =====================================================
 
@@ -1880,12 +1881,10 @@ if st.button(
 ):
 
 
-    report = create_daily_report()
+    report_file = create_daily_report()
 
 
-
-    st.session_state.daily_report = report
-
+    st.session_state.daily_report = str(report_file)
 
 
     st.success(
@@ -1901,25 +1900,33 @@ if st.button(
 if "daily_report" in st.session_state:
 
 
-    with open(
+    report_path = Path(
 
-        st.session_state.daily_report,
+        st.session_state.daily_report
 
-        "rb"
-
-    ) as file:
+    )
 
 
+    if report_path.exists():
 
-        st.download_button(
 
-            "⬇️ Download Editable Excel Report",
+        with open(
 
-            data=file,
+            report_path,
 
-            file_name=st.session_state.daily_report.name,
+            "rb"
 
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ) as file:
 
-        )
-        
+
+            st.download_button(
+
+                label="⬇️ Download Editable Excel Report",
+
+                data=file,
+
+                file_name=report_path.name,
+
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+            )
